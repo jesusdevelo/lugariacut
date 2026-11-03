@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lugaria · Caseta</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+body{display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--s1);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.logo{font-family:var(--fh);font-size:19px;font-weight:800}
+.logo b{color:var(--acc)}
+.logo span{font-family:var(--f);font-size:12px;font-weight:500;color:var(--muted);margin-left:8px}
+.hstat{display:flex;align-items:baseline;gap:6px;margin-left:auto}
+.hstat strong{font-family:var(--fh);font-size:22px}
+.hstat small{font-size:12px;color:var(--muted)}
+#clock{font-variant-numeric:tabular-nums;font-size:14px;color:var(--muted);min-width:70px;text-align:right}
+.hbtn{background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:6px 12px;font-size:12px}
+.hbtn.on{border-color:var(--acc);color:var(--acc)}
+
+main{flex:1;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:18px;padding:18px 20px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+
+/* Último vehículo: el elemento protagonista */
+#last{background:var(--s1);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+#last .band{padding:10px 18px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:10px}
+#last.ok   .band{background:rgba(0,229,160,.14);color:var(--acc)}
+#last.no   .band{background:rgba(255,91,91,.16);color:var(--red)}
+#last.wait .band{background:rgba(245,200,66,.16);color:var(--gold)}
+#last.man  .band{background:rgba(91,159,255,.14);color:var(--blue)}
+#last.idle .band{background:var(--s2);color:var(--muted)}
+#last .body{padding:22px 18px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+@media(max-width:600px){#last .body{grid-template-columns:1fr}}
+#last .plate{font-size:clamp(34px,6vw,58px);padding:4px 22px;border-width:4px;border-radius:9px;box-shadow:inset 0 0 0 4px #f4f6fb,inset 0 0 0 6px #9aa6c0}
+#last .who{font-size:22px;font-weight:700;line-height:1.2}
+#last .meta{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.5}
+#last .reason{margin-top:10px;font-size:15px;font-weight:600}
+#last .thumbbig{height:64px;border-radius:6px;margin-top:12px;display:block}
+#last .actions{padding:0 18px 18px}
+#last.flash{animation:flash .9s ease}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,255,255,.35)}100%{box-shadow:0 0 0 18px rgba(255,255,255,0)}}
+
+.h2{font-family:var(--fh);font-size:15px;font-weight:700;margin:22px 0 10px}
+#gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.gate{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.gate .top{display:flex;align-items:center;gap:8px}
+.gate .nm{font-weight:700;flex:1}
+.gate .md{font-size:12px;color:var(--muted)}
+.gate .btn-open{justify-content:center}
+
+aside .card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.lookup{display:flex;gap:6px}
+.lookup input{flex:1;padding:10px 11px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:15px;text-transform:uppercase;outline:none}
+.lookup input:focus{border-color:var(--acc)}
+#lk-res{font-size:13px;margin-top:10px;line-height:1.5}
+#feed{list-style:none;max-height:calc(100vh - 330px);min-height:240px;overflow-y:auto}
+#feed li{display:grid;grid-template-columns:62px auto 1fr;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+#feed li:hover{background:var(--s2)}
+#feed li:last-child{border-bottom:none}
+#feed .t{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+#feed .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#feed .empty{display:block;color:var(--muted);text-align:center;padding:30px 0;cursor:default}
+</style>
+</head>
+<body>
+
+<div id="login-gate">
+  <div class="login-card">
+    <div class="lc-logo"><b>Lug</b>aria</div>
+    <div class="lc-sub">Caseta de control de acceso</div>
+    <div class="errbox" id="lerr"></div>
+    <div class="fg"><label for="lem">Correo</label><input id="lem" type="email" autocomplete="email"></div>
+    <div class="fg"><label for="lpw">Contraseña</label><input id="lpw" type="password" autocomplete="current-password"></div>
+    <button class="bfull" id="lbtn">Entrar</button>
+    <a href="admin.html" style="display:block;margin-top:14px;font-size:12px;color:var(--muted)">Ir al panel de administración</a>
+  </div>
+</div>
+
+<header>
+  <div class="logo"><b>Lug</b>aria<span>Caseta</span></div>
+  <div class="hstat"><strong id="occ">—</strong><small id="occ-cap">vehículos dentro</small></div>
+  <div id="clock"></div>
+  <button class="hbtn" id="sound" title="Alerta sonora cuando se niega un acceso">🔇 Sonido</button>
+  <button class="hbtn" id="who">—</button>
+</header>
+
+<main>
+  <section>
+    <div id="last" class="idle">
+      <div class="band"><span id="l-dec">Esperando vehículos…</span><span id="l-when"></span></div>
+      <div class="body">
+        <div><span class="plate none" id="l-plate">— — —</span><img id="l-thumb" class="thumbbig" alt="Recorte de la placa" hidden></div>
+        <div>
+          <div class="who" id="l-who">Sin lecturas todavía</div>
+          <div class="meta" id="l-meta">Aquí aparece cada auto que llega a la pluma.</div>
+          <div class="reason" id="l-reason"></div>
+        </div>
+      </div>
+      <div class="actions" id="l-actions"></div>
+    </div>
+
+    <div class="h2">Plumas</div>
+    <div id="gates"><div class="gate"><span class="md">Cargando…</span></div></div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <label for="lk" style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Consultar placa</label>
+      <div class="lookup"><input id="lk" placeholder="JKL-123-A" autocomplete="off"></div>
+      <div id="lk-res"></div>
+    </div>
+    <div class="card" style="padding:8px 10px">
+      <div style="font-weight:700;font-size:14px;padding:6px 4px 8px">Movimientos de hoy</div>
+      <ul id="feed"><li class="empty">Sin movimientos hoy</li></ul>
+    </div>
+  </aside>
+</main>
+
+<!-- Confirmar apertura manual -->
+<div class="ov" id="m-open">
+ <div class="modal">
+  <div class="mh"><h2>Abrir pluma</h2><button class="xb" data-close="m-open" aria-label="Cerrar">✕</button></div>
+  <div class="mb">
+   <p id="mo-txt" style="font-size:14px;color:var(--muted);margin-bottom:14px"></p>
+   <div class="fg"><label for="mo-why">Motivo</label>
+    <select id="mo-why">
+     <option>Visitante</option><option>Proveedor</option><option>Personal de la institución</option>
+     <option>Estudiante sin vehículo registrado</option><option>La cámara no leyó la placa</option><option>Otro</option>
+    </select></div>
+   <div class="fg"><label for="mo-note">Detalle (opcional)</label><input id="mo-note" placeholder="Nombre del visitante, empresa…"></div>
+  </div>
+  <div class="mf"><button class="bcancel" data-close="m-open">Cancelar</button><button class="bsub" id="mo-go">Abrir ahora</button></div>
+ </div>
+</div>
+
+<div id="snack"></div>
+
+<script type="module">
+import { collection, query, where, orderBy, limit, onSnapshot, doc, addDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { db, $, esc, normalize, fold, DECISION, MODES, fmtHora, toDate, startOfDay, gateOnline,
+         snack, busy, guard, login, logout } from "./common.js";
+
+const S = { user:null, staff:null, gates:[], logs:[], vehicles:new Map(), students:new Map(),
+            unsubs:[], bootT:Date.now(), sound:false, pending:null, lastShown:null };
+
+/* ── Sesión ── */
+guard({
+  roles: ['admin', 'guardia'],
+  onIn: (user, staff) => { S.user = user; S.staff = staff; $('login-gate').style.display = 'none'; $('who').textContent = (staff.name || user.email) + ' · Salir'; start(); },
+  onOut: msg => { stop(); $('login-gate').style.display = 'flex'; if (msg) { $('lerr').textContent = msg; $('lerr').className = 'errbox on'; } },
+});
+$('lbtn').onclick = async () => {
+  $('lerr').className = 'errbox'; busy($('lbtn'), true);
+  const err = await login($('lem').value.trim(), $('lpw').value);
+  busy($('lbtn'), false);
+  if (err) { $('lerr').textContent = err; $('lerr').className = 'errbox on'; }
+};
+$('lpw').onkeydown = e => { if (e.key === 'Enter') $('lbtn').click(); };
+$('who').onclick = () => { if (confirm('¿Cerrar sesión?')) logout(); };
+
+/* ── Datos en vivo ── */
+function start() {
+  stop();
+  S.bootT = Date.now();
+  S.unsubs.push(onSnapshot(collection(db, 'gates'), s => { S.gates = s.docs.map(d => ({ id:d.id, ...d.data() })); renderGates(); }));
+  S.unsubs.push(onSnapshot(doc(db, 'stats', 'occupancy'), s => {
+    const o = s.data() || {};
+    $('occ').textContent = Math.max(0, o.inside || 0);
+    $('occ-cap').textContent = o.capacity ? `de ${o.capacity} lugares ocupados` : 'vehículos dentro';
+  }));
+  const q = query(collection(db, 'accessLogs'), where('ts', '>=', startOfDay()), orderBy('ts', 'desc'), limit(80));
+  S.unsubs.push(onSnapshot(q, s => {
+    S.logs = s.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderFeed();
+    const fresh = s.docChanges().filter(c => c.type === 'added' && (toDate(c.doc.data().ts)?.getTime() || 0) > S.bootT - 5000);
+    if (fresh.length) showLast({ id:fresh[0].doc.id, ...fresh[0].doc.data() }, true);
+    else if (!S.lastShown && S.logs[0]) showLast(S.logs[0], false);
+  }, e => snack('No se pudo leer la bitácora: ' + e.message, true)));
+  S.unsubs.push(onSnapshot(collection(db, 'vehicles'), s => { S.vehicles = new Map(s.docs.map(d => [d.id, d.data()])); }));
+  S.unsubs.push(onSnapshot(collection(db, 'students'), s => { S.students = new Map(s.docs.map(d => [d.id, d.data()])); }));
+}
+function stop() { S.unsubs.forEach(u => u()); S.unsubs = []; }
+setInterval(() => { $('clock').textContent = new Date().toLocaleTimeString('es-MX'); }, 1000);
+setInterval(renderGates, 15000);
+
+/* ── Último vehículo ── */
+function showLast(e, isNew) {
+  S.lastShown = e;
+  const d = DECISION[e.decision] || DECISION.denegado;
+  const card = $('last');
+  card.className = d.c + (isNew ? ' flash' : '');
+  $('l-dec').textContent = ({ manual:'Apertura manual', permitido:'Acceso permitido', en_espera:'Revisa y decide', denegado:'Acceso denegado' })[e.decision] || d.t;
+  $('l-when').textContent = `${e.gateName || e.gateId || ''} · ${fmtHora(e.ts)}`;
+  const p = $('l-plate');
+  p.textContent = e.vehiclePlate || e.plate || 'Sin placa';
+  p.className = 'plate' + (e.plate ? '' : ' none');
+  const th = $('l-thumb');
+  if (e.thumb) { th.src = e.thumb; th.hidden = false; } else th.hidden = true;
+  $('l-who').textContent = e.studentName || (e.decision === 'manual' ? (e.reasonText || 'Apertura manual') : 'Vehículo no identificado');
+  $('l-meta').innerHTML = [
+    e.studentId && `Matrícula <b>${esc(e.studentId)}</b>`, e.career && esc(e.career), e.vehicleDesc && esc(e.vehicleDesc),
+    e.openedBy && `Abrió: ${esc(e.openedBy)}`,
+  ].filter(Boolean).join('<br>') || '&nbsp;';
+  $('l-reason').textContent = e.decision === 'manual' ? '' : (e.reasonText || '') + (e.method === 'aproximada' ? ' (lectura aproximada)' : '');
+  const acts = $('l-actions');
+  acts.innerHTML = '';
+  if (['denegado', 'en_espera'].includes(e.decision)) {
+    const b = document.createElement('button');
+    b.className = 'btn-open';
+    b.textContent = `Abrir ${e.gateName || 'pluma'} de todos modos`;
+    b.onclick = () => askOpen(e.gateId, { plate:e.plate, studentId:e.studentId, studentName:e.studentName });
+    acts.appendChild(b);
+  }
+  if (isNew && S.sound && ['denegado', 'en_espera'].includes(e.decision)) beep();
+  if (isNew) setTimeout(() => card.classList.remove('flash'), 1000);
+}
+
+/* ── Plumas ── */
+function renderGates() {
+  const box = $('gates');
+  if (!S.gates.length) { box.innerHTML = '<div class="gate"><span class="md">Ninguna pluma conectada todavía. Arranca el servicio de la pluma (gate-service) y aparecerá aquí.</span></div>'; return; }
+  box.innerHTML = '';
+  for (const g of S.gates) {
+    const on = gateOnline(g);
+    const el = document.createElement('div');
+    el.className = 'gate';
+    el.innerHTML = `<div class="top"><span class="dot ${on ? 'on' : 'off'}"></span><span class="nm">${esc(g.name || g.id)}</span><span class="md">${esc(g.direction || '')}</span></div>
+      <div class="md">${on ? esc(MODES[g.mode]?.split(' — ')[0] || g.mode) + (g.cameraOk === false ? ' · ⚠️ sin cámara' : '') : 'Sin conexión con el equipo'}</div>`;
+    const b = document.createElement('button');
+    b.className = 'btn-open';
+    b.textContent = 'Abrir pluma';
+    b.disabled = !on;
+    b.title = on ? '' : 'El equipo de esta pluma no responde';
+    b.onclick = () => askOpen(g.id, {});
+    el.appendChild(b);
+    box.appendChild(el);
+  }
+}
+
+/* ── Apertura manual ── */
+function askOpen(gateId, ctx) {
+  const g = S.gates.find(x => x.id === gateId) || { id:gateId };
+  S.pending = { gate:g, ctx };
+  $('mo-txt').innerHTML = `Se abrirá <b style="color:var(--text)">${esc(g.name || g.id)}</b>` + (ctx.plate ? ` para la placa <span class="plate">${esc(ctx.plate)}</span>` : '') + '. Queda registrado con tu nombre.';
+  $('mo-note').value = '';
+  $('m-open').classList.add('open');
+}
+$('mo-go').onclick = async () => {
+  const { gate, ctx } = S.pending;
+  const btn = $('mo-go'); busy(btn, true);
+  try {
+    const note = [$('mo-why').value, $('mo-note').value.trim()].filter(Boolean).join(': ');
+    const ref = await addDoc(collection(db, 'commands'), {
+      gateId: gate.id, action: 'open', status: 'pending', note,
+      plate: ctx.plate || null, studentId: ctx.studentId || null, studentName: ctx.studentName || null,
+      requestedBy: S.user.uid, requestedByName: S.staff.name || S.user.email, createdAt: serverTimestamp(),
+    });
+    $('m-open').classList.remove('open');
+    snack('Orden enviada…');
+    const t = setTimeout(() => { un(); snack('La pluma no confirmó la apertura. Revisa el equipo.', true); }, 12000);
+    const un = onSnapshot(ref, s => {
+      const st = s.data()?.status;
+      if (st && st !== 'pending') { clearTimeout(t); un(); st === 'done' ? snack('Pluma abierta') : snack('No se abrió: ' + st, true); }
+    });
+  } catch (e) { snack('No se pudo enviar la orden: ' + e.message, true); }
+  finally { busy(btn, false); }
+};
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).classList.remove('open'));
+
+/* ── Bitácora del día ── */
+function renderFeed() {
+  const ul = $('feed');
+  if (!S.logs.length) { ul.innerHTML = '<li class="empty">Sin movimientos hoy</li>'; return; }
+  ul.innerHTML = S.logs.map((e, i) => {
+    const d = DECISION[e.decision] || DECISION.denegado;
+    return `<li data-i="${i}"><span class="t">${fmtHora(e.ts).slice(0, 5)}</span>
+      <span class="plate${e.plate ? '' : ' none'}" style="font-size:12px">${esc(e.plate || '—')}</span>
+      <span class="n"><span class="bdg ${d.c}" style="margin-right:6px">${d.t}</span>${esc(e.studentName || e.reasonText || '')}</span></li>`;
+  }).join('');
+  ul.querySelectorAll('li[data-i]').forEach(li => li.onclick = () => showLast(S.logs[+li.dataset.i], false));
+}
+
+/* ── Consulta rápida ── */
+$('lk').oninput = () => {
+  const k = normalize($('lk').value), out = $('lk-res');
+  if (k.length < 3) { out.innerHTML = ''; return; }
+  const hits = [...S.vehicles.entries()].filter(([id, v]) => id.includes(k) || fold(id) === fold(k)).slice(0, 5);
+  if (!hits.length) { out.innerHTML = '<span style="color:var(--red)">No hay vehículos registrados con esa placa.</span>'; return; }
+  out.innerHTML = hits.map(([id, v]) => {
+    const s = S.students.get(v.studentId) || {};
+    const okS = s.active !== false && v.active !== false && (!s.validUntil || s.validUntil >= new Date().toISOString().slice(0, 10));
+    return `<div style="padding:8px 0;border-top:1px solid var(--border)"><span class="plate" style="font-size:12px">${esc(v.plate || id)}</span>
+      <span class="bdg ${okS ? 'ok' : 'no'}" style="margin-left:6px">${okS ? 'Autorizado' : 'Sin acceso'}</span><br>
+      <b>${esc(s.name || v.studentName || '—')}</b> · ${esc(v.studentId || '')}<br>
+      <span style="color:var(--muted)">${esc([v.brand, v.model, v.color].filter(Boolean).join(' '))}${s.validUntil ? ' · vigencia ' + esc(s.validUntil) : ''}</span></div>`;
+  }).join('');
+};
+
+/* ── Sonido ── */
+let actx;
+$('sound').onclick = () => {
+  S.sound = !S.sound;
+  if (S.sound && !actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  $('sound').textContent = S.sound ? '🔔 Sonido' : '🔇 Sonido';
+  $('sound').classList.toggle('on', S.sound);
+  if (S.sound) beep();
+};
+function beep() {
+  if (!actx) return;
+  [0, .22].forEach(dt => {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = 880; g.gain.value = .15;
+    o.connect(g); g.connect(actx.destination);
+    o.start(actx.currentTime + dt); o.stop(actx.currentTime + dt + .15);
+  });
+}
+</script>
+</body>
+</html>

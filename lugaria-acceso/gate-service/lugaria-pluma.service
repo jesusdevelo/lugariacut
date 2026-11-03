@@ -1,0 +1,20 @@
+# Servicio systemd para que la pluma arranque sola al encender el equipo.
+# 1) Ajusta User y las rutas.
+# 2) sudo cp lugaria-pluma.service /etc/systemd/system/
+# 3) sudo systemctl daemon-reload && sudo systemctl enable --now lugaria-pluma
+# 4) Ver logs: journalctl -u lugaria-pluma -f
+[Unit]
+Description=Lugaria - pluma con lectura de placas
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/lugaria-acceso/gate-service
+ExecStart=/home/pi/lugaria-acceso/gate-service/.venv/bin/python main.py --config config.yaml
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

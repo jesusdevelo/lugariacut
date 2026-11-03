@@ -1,0 +1,9 @@
+# Instalar con:  pip install -r requirements.txt
+fast-alpr[onnx]>=0.4      # en PC con NVIDIA usa fast-alpr[onnx-gpu]
+opencv-python-headless>=4.9   # usa opencv-python si vas a usar --mostrar
+firebase-admin>=6.5
+PyYAML>=6.0
+requests>=2.31
+# Opcionales según el controlador de la pluma:
+# gpiozero        # Raspberry Pi (ya viene en Raspberry Pi OS)
+# pyserial        # Arduino por USB

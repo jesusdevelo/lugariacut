@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lugaria · Administración</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+html,body{overflow:hidden}
+body{display:flex}
+#aside{width:220px;flex-shrink:0;height:100vh;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.aside-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.alogo{font-family:var(--fh);font-size:18px;font-weight:800}.alogo b{color:var(--acc)}
+.alog-tag{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.anav{flex:1;padding:10px 8px;overflow-y:auto}
+.anav-label{font-size:11px;font-weight:600;color:var(--muted);padding:10px 10px 5px}
+.anav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rsm);cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:2px;white-space:nowrap;background:none;width:100%;text-align:left}
+.anav-item:hover{background:var(--s2);color:var(--text)}
+.anav-item.active{background:var(--s3);color:var(--text);font-weight:600}
+.anic{font-size:16px;width:20px;text-align:center}
+.aside-foot{padding:12px;border-top:1px solid var(--border);font-size:12px}
+.aside-foot .em{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aside-foot button{background:none;color:var(--muted);font-size:12px;padding:6px 0 0}
+.aside-foot button:hover{color:var(--red)}
+#main{flex:1;display:flex;flex-direction:column;height:100vh;min-width:0}
+#topbar{height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:var(--s1);border-bottom:1px solid var(--border)}
+.topbar-ttl{font-family:var(--fh);font-size:17px;font-weight:700}
+#content{flex:1;overflow-y:auto;padding:20px 22px}
+.view{display:none}.view.active{display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:22px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;border-top:3px solid var(--c,var(--acc))}
+.sc-label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.sc-val{font-family:var(--fh);font-size:28px;font-weight:800;line-height:1}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.sh h2{font-family:var(--fh);font-size:15px;font-weight:700}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tools input,.tools select{padding:8px 11px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:13px;outline:none}
+.tools input[type=search]{flex:1;min-width:200px}
+.tba{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-right:4px}
+.tba-e{background:rgba(91,159,255,.12);color:var(--blue)}
+.tba-t{background:rgba(0,229,160,.1);color:var(--acc)}
+.tba-d{background:rgba(255,91,91,.1);color:var(--red)}
+.plates{display:flex;gap:4px;flex-wrap:wrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:22px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.card h3{font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.vrow{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--s2);border-radius:var(--rsm);margin-bottom:6px;font-size:13px}
+.vrow .d{flex:1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vrow.gone{opacity:.4;text-decoration:line-through}
+.vadd{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto;gap:6px;margin-top:8px}
+.vadd input{padding:8px 9px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:13px;outline:none;min-width:0}
+.vadd input:first-child{text-transform:uppercase}
+.vadd button{padding:0 12px;background:var(--s3);color:var(--text);border-radius:var(--rsm);font-weight:700}
+.warn{font-size:12px;color:var(--gold);margin-top:6px}
+.drop{border:1.5px dashed var(--s4);border-radius:var(--r);padding:22px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px}
+.drop input{margin-top:10px;color:var(--muted)}
+pre.csv{background:var(--s2);border-radius:var(--rsm);padding:10px;font-size:11px;color:var(--muted);overflow-x:auto;margin:8px 0 14px}
+@media(max-width:900px){
+  #aside{width:56px}.alogo,.alog-tag,.anav-label,.anav-item span:not(.anic),.aside-foot .em,.aside-foot .nm{display:none}
+  .anav-item{justify-content:center;padding:10px}#content{padding:14px}
+  .vadd{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="login-gate">
+  <div class="login-card">
+    <div class="lc-logo"><b>Lug</b>aria</div>
+    <div class="lc-sub">Administración del control de acceso</div>
+    <div class="errbox" id="lerr"></div>
+    <div class="fg"><label for="lem">Correo</label><input id="lem" type="email" autocomplete="email"></div>
+    <div class="fg"><label for="lpw">Contraseña</label><input id="lpw" type="password" autocomplete="current-password"></div>
+    <button class="bfull" id="lbtn">Iniciar sesión</button>
+    <a href="index.html" style="display:block;margin-top:14px;font-size:12px;color:var(--muted)">Ir a la caseta</a>
+  </div>
+</div>
+
+<nav id="aside">
+  <div class="aside-logo"><div class="alogo"><b>Lug</b>aria</div><span class="alog-tag">Control de acceso</span></div>
+  <div class="anav">
+    <div class="anav-label">Operación</div>
+    <button class="anav-item active" data-v="dashboard"><span class="anic">📊</span><span>Resumen</span></button>
+    <button class="anav-item" data-v="logs"><span class="anic">📋</span><span>Bitácora</span></button>
+    <button class="anav-item" onclick="window.open('index.html','_blank')"><span class="anic">🖥️</span><span>Abrir caseta</span></button>
+    <div class="anav-label">Padrón</div>
+    <button class="anav-item" data-v="students"><span class="anic">🎓</span><span>Estudiantes</span></button>
+    <button class="anav-item" data-v="vehicles"><span class="anic">🚗</span><span>Vehículos</span></button>
+    <button class="anav-item" data-v="import"><span class="anic">📥</span><span>Importar CSV</span></button>
+    <div class="anav-label">Configuración</div>
+    <button class="anav-item" data-v="gates"><span class="anic">🚧</span><span>Plumas</span></button>
+    <button class="anav-item" data-v="staff"><span class="anic">👮</span><span>Personal</span></button>
+  </div>
+  <div class="aside-foot"><div class="nm" id="anm">—</div><div class="em" id="aem"></div><button id="logout">Cerrar sesión</button></div>
+</nav>
+
+<div id="main">
+  <div id="topbar"><div class="topbar-ttl" id="ttl">Resumen</div><span style="font-size:12px;color:var(--muted)"><span class="dot on"></span> En vivo</span></div>
+  <div id="content">
+
+    <!-- Resumen -->
+    <section class="view active" id="v-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="sc-label">Dentro ahora</div><div class="sc-val" id="st-in">—</div><div class="sc-sub" id="st-cap">vehículos</div></div>
+        <div class="stat-card" style="--c:var(--blue)"><div class="sc-label">Accesos hoy</div><div class="sc-val" id="st-ok">—</div><div class="sc-sub">permitidos y manuales</div></div>
+        <div class="stat-card" style="--c:var(--red)"><div class="sc-label">Denegados hoy</div><div class="sc-val" id="st-no">—</div><div class="sc-sub">lecturas sin acceso</div></div>
+        <div class="stat-card" style="--c:var(--purple)"><div class="sc-label">Estudiantes activos</div><div class="sc-val" id="st-st">—</div><div class="sc-sub" id="st-st2"></div></div>
+        <div class="stat-card" style="--c:var(--gold)"><div class="sc-label">Vehículos</div><div class="sc-val" id="st-ve">—</div><div class="sc-sub">placas registradas</div></div>
+      </div>
+      <div class="sh"><h2>Plumas</h2></div>
+      <div class="cards" id="dash-gates"></div>
+      <div class="sh"><h2>Últimos movimientos</h2><button class="btn-ghost" data-go="logs">Ver bitácora</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Hora</th><th>Placa</th><th>Estudiante</th><th>Pluma</th><th>Resultado</th></tr></thead><tbody id="dash-logs"></tbody></table></div>
+    </section>
+
+    <!-- Estudiantes -->
+    <section class="view" id="v-students">
+      <div class="sh"><h2>Estudiantes</h2><button class="btn-add" id="new-st">+ Nuevo estudiante</button></div>
+      <div class="tools">
+        <input type="search" id="sq" placeholder="Buscar por nombre, matrícula, carrera o placa">
+        <select id="sf"><option value="">Todos</option><option value="ok">Con acceso</option><option value="off">Inactivos o vencidos</option></select>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Estudiante</th><th>Carrera</th><th>Vehículos</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead><tbody id="st-tbl"></tbody></table></div>
+    </section>
+
+    <!-- Vehículos -->
+    <section class="view" id="v-vehicles">
+      <div class="sh"><h2>Vehículos</h2></div>
+      <div class="tools"><input type="search" id="vq" placeholder="Buscar placa, estudiante, marca o color"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Placa</th><th>Estudiante</th><th>Vehículo</th><th>Estado</th><th></th></tr></thead><tbody id="ve-tbl"></tbody></table></div>
+    </section>
+
+    <!-- Importar -->
+    <section class="view" id="v-import">
+      <div class="sh"><h2>Importar estudiantes y vehículos</h2><a class="btn-ghost" href="plantilla-estudiantes.csv" download style="text-decoration:none">Descargar plantilla</a></div>
+      <p style="font-size:13px;color:var(--muted);max-width:70ch;line-height:1.6">Una fila por vehículo. Si un estudiante tiene dos autos, repite sus datos en dos filas. La matrícula identifica al estudiante: si ya existe se actualiza, si no, se crea. La vigencia va en formato AAAA-MM-DD; después de esa fecha la pluma ya no abre.</p>
+      <pre class="csv">matricula,nombre,carrera,correo,telefono,vigencia,placa,marca,modelo,color
+A0012345,Mariana López Ruiz,Ing. en Sistemas,mariana@escuela.edu.mx,3312345678,2027-07-31,JKL-123-A,Nissan,Versa,Gris</pre>
+      <div class="drop">Exporta la lista desde el sistema escolar como CSV (UTF-8) y selecciónala aquí<br><input type="file" id="csv-file" accept=".csv,text/csv"></div>
+      <label class="chk"><input type="checkbox" id="csv-deact"> Desactivar a los estudiantes que no aparezcan en el archivo (útil al cambiar de ciclo escolar)</label>
+      <div id="csv-prev"></div>
+    </section>
+
+    <!-- Bitácora -->
+    <section class="view" id="v-logs">
+      <div class="sh"><h2>Bitácora de accesos</h2><button class="btn-ghost" id="lg-exp">Exportar CSV</button></div>
+      <div class="tools">
+        <input type="date" id="lg-date">
+        <select id="lg-dec"><option value="">Todos los resultados</option><option value="permitido">Permitidos</option><option value="denegado">Denegados</option><option value="en_espera">En espera</option><option value="manual">Manuales</option></select>
+        <select id="lg-gate"><option value="">Todas las plumas</option></select>
+        <input type="search" id="lg-q" placeholder="Placa, nombre o matrícula">
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Hora</th><th>Placa</th><th>Estudiante</th><th>Pluma</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody id="lg-tbl"></tbody></table></div>
+    </section>
+
+    <!-- Plumas -->
+    <section class="view" id="v-gates">
+      <div class="sh"><h2>Plumas</h2></div>
+      <div class="info-box">Cada pluma aparece aquí sola la primera vez que arranca su servicio (gate-service). Los cambios de modo llegan al equipo en segundos.</div>
+      <div class="cards" id="gt-cards"></div>
+      <div class="sh"><h2>Ocupación</h2></div>
+      <div class="card" style="max-width:520px">
+        <div class="r2">
+          <div class="fg"><label for="oc-cap">Capacidad del estacionamiento</label><input id="oc-cap" type="number" min="0"></div>
+          <div class="fg"><label for="oc-in">Vehículos dentro ahora</label><input id="oc-in" type="number" min="0"><div class="hint">Corrígelo si el conteo se desfasa (por ejemplo, al inicio del día).</div></div>
+        </div>
+        <button class="btn-add" id="oc-save">Guardar ocupación</button>
+      </div>
+    </section>
+
+    <!-- Personal -->
+    <section class="view" id="v-staff">
+      <div class="sh"><h2>Personal con acceso</h2><button class="btn-add" id="new-sf">+ Nueva cuenta</button></div>
+      <div class="info-box">Guardia: ve la caseta y puede abrir la pluma manualmente. Administrador: además gestiona estudiantes, vehículos, plumas y personal.</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th></th></tr></thead><tbody id="sf-tbl"></tbody></table></div>
+    </section>
+  </div>
+</div>
+
+<!-- Modal estudiante -->
+<div class="ov" id="m-st">
+ <div class="modal wide">
+  <div class="mh"><h2 id="mst-h">Nuevo estudiante</h2><button class="xb" data-close="m-st" aria-label="Cerrar">✕</button></div>
+  <div class="mb">
+   <div class="errbox" id="mst-err"></div>
+   <div class="r2">
+    <div class="fg"><label for="st-mat">Matrícula *</label><input id="st-mat" placeholder="A0012345"></div>
+    <div class="fg"><label for="st-name">Nombre completo *</label><input id="st-name"></div>
+   </div>
+   <div class="r2">
+    <div class="fg"><label for="st-car">Carrera</label><input id="st-car"></div>
+    <div class="fg"><label for="st-vu">Vigencia</label><input id="st-vu" type="date"><div class="hint">Vacío = sin fecha límite</div></div>
+   </div>
+   <div class="r3">
+    <div class="fg"><label for="st-em">Correo</label><input id="st-em" type="email"></div>
+    <div class="fg"><label for="st-ph">Teléfono</label><input id="st-ph"></div>
+    <div class="fg"><label for="st-act">Acceso</label><select id="st-act"><option value="true">Activo</option><option value="false">Suspendido</option></select></div>
+   </div>
+   <div style="font-weight:700;font-size:13px;margin:8px 0">Vehículos vinculados</div>
+   <div id="st-vlist"></div>
+   <div class="vadd">
+    <input id="nv-plate" placeholder="Placa"><input id="nv-brand" placeholder="Marca"><input id="nv-model" placeholder="Modelo"><input id="nv-color" placeholder="Color">
+    <button id="nv-add" title="Agregar vehículo">+</button>
+   </div>
+   <div class="warn" id="nv-warn"></div>
+  </div>
+  <div class="mf"><button class="bcancel" data-close="m-st">Cancelar</button><button class="bsub" id="mst-save">Guardar</button></div>
+ </div>
+</div>
+
+<!-- Modal personal -->
+<div class="ov" id="m-sf">
+ <div class="modal">
+  <div class="mh"><h2>Nueva cuenta</h2><button class="xb" data-close="m-sf" aria-label="Cerrar">✕</button></div>
+  <div class="mb">
+   <div class="errbox" id="msf-err"></div>
+   <div class="fg"><label for="sf-name">Nombre</label><input id="sf-name"></div>
+   <div class="fg"><label for="sf-em">Correo</label><input id="sf-em" type="email"></div>
+   <div class="fg"><label for="sf-pw">Contraseña inicial</label><input id="sf-pw" type="text" placeholder="Mínimo 6 caracteres"></div>
+   <div class="fg"><label for="sf-role">Rol</label><select id="sf-role"><option value="guardia">Guardia</option><option value="admin">Administrador</option></select></div>
+  </div>
+  <div class="mf"><button class="bcancel" data-close="m-sf">Cancelar</button><button class="bsub" id="msf-save">Crear cuenta</button></div>
+ </div>
+</div>
+
+<div id="snack"></div>
+
+<script type="module">
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, setDoc, updateDoc,
+         deleteDoc, addDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+import { db, $, esc, normalize, fold, DECISION, MODES, fmtHora, fmtFecha, toDate, startOfDay, gateOnline,
+         snack, busy, guard, login, logout } from "./common.js";
+
+const VIEWS = { dashboard:'Resumen', students:'Estudiantes', vehicles:'Vehículos', import:'Importar CSV', logs:'Bitácora', gates:'Plumas', staff:'Personal' };
+const S = { user:null, staff:null, students:new Map(), vehicles:new Map(), gates:[], today:[], logs:[], staffList:[],
+            occ:{}, unsubs:[], edit:null, csvRows:null };
+const today = () => new Date().toISOString().slice(0, 10);
+const hasAccess = s => s && s.active !== false && (!s.validUntil || s.validUntil >= today());
+
+/* ── Sesión ── */
+guard({
+  roles: ['admin'],
+  onIn: (user, staff) => {
+    S.user = user; S.staff = staff;
+    $('login-gate').style.display = 'none';
+    $('anm').textContent = staff.name || 'Administrador'; $('aem').textContent = user.email;
+    boot();
+  },
+  onOut: msg => { S.unsubs.forEach(u => u()); S.unsubs = []; $('login-gate').style.display = 'flex'; if (msg) { $('lerr').textContent = msg; $('lerr').className = 'errbox on'; } },
+});
+$('lbtn').onclick = async () => {
+  $('lerr').className = 'errbox'; busy($('lbtn'), true);
+  const err = await login($('lem').value.trim(), $('lpw').value);
+  busy($('lbtn'), false);
+  if (err) { $('lerr').textContent = err; $('lerr').className = 'errbox on'; }
+};
+$('lpw').onkeydown = e => { if (e.key === 'Enter') $('lbtn').click(); };
+$('logout').onclick = () => logout();
+
+/* ── Navegación ── */
+function go(v) {
+  document.querySelectorAll('.anav-item[data-v]').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'v-' + v));
+  $('ttl').textContent = VIEWS[v];
+  if (v === 'logs') loadLogs();
+  render();
+}
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => go(b.dataset.v));
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).classList.remove('open'));
+
+/* ── Datos en vivo ── */
+function boot() {
+  S.unsubs.forEach(u => u());
+  const err = e => snack('Error de lectura: ' + e.message, true);
+  S.unsubs = [
+    onSnapshot(collection(db, 'students'), s => { S.students = new Map(s.docs.map(d => [d.id, { id:d.id, ...d.data() }])); render(); }, err),
+    onSnapshot(collection(db, 'vehicles'), s => { S.vehicles = new Map(s.docs.map(d => [d.id, { id:d.id, ...d.data() }])); render(); }, err),
+    onSnapshot(collection(db, 'gates'), s => { S.gates = s.docs.map(d => ({ id:d.id, ...d.data() })); render(); }, err),
+    onSnapshot(doc(db, 'stats', 'occupancy'), s => { S.occ = s.data() || {}; render(); }, err),
+    onSnapshot(query(collection(db, 'accessLogs'), where('ts', '>=', startOfDay()), orderBy('ts', 'desc'), limit(500)),
+               s => { S.today = s.docs.map(d => ({ id:d.id, ...d.data() })); render(); }, err),
+    onSnapshot(collection(db, 'staff'), s => { S.staffList = s.docs.map(d => ({ uid:d.id, ...d.data() })); render(); }, err),
+  ];
+  $('lg-date').value = today();
+}
+setInterval(() => render(), 20000);
+
+function vehiclesOf(sid) { return [...S.vehicles.values()].filter(v => v.studentId === sid); }
+
+function render() {
+  const v = document.querySelector('.view.active')?.id.slice(2);
+  if (v === 'dashboard') renderDash();
+  if (v === 'students') renderStudents();
+  if (v === 'vehicles') renderVehicles();
+  if (v === 'gates') renderGates();
+  if (v === 'staff') renderStaff();
+  if (v === 'logs') renderLogs();
+}
+
+/* ── Resumen ── */
+function logRow(e, full) {
+  const d = DECISION[e.decision] || DECISION.denegado;
+  return `<tr><td>${full ? fmtFecha(e.ts) : fmtHora(e.ts)}</td>
+    <td>${e.thumb ? `<img class="thumb" src="${esc(e.thumb)}" alt="">` : ''}<span class="plate${e.plate ? '' : ' none'}">${esc(e.plate || '—')}</span></td>
+    <td>${esc(e.studentName || '—')}<div class="sub">${esc(e.studentId || '')}</div></td>
+    <td>${esc(e.gateName || e.gateId || '')}</td>
+    <td><span class="bdg ${d.c}">${d.t}</span></td>
+    ${full ? `<td>${esc(e.reasonText || '')}${e.openedBy ? `<div class="sub">por ${esc(e.openedBy)}</div>` : ''}${e.method === 'aproximada' ? '<div class="sub">lectura aproximada</div>' : ''}</td>` : ''}</tr>`;
+}
+function renderDash() {
+  $('st-in').textContent = Math.max(0, S.occ.inside || 0);
+  $('st-cap').textContent = S.occ.capacity ? `de ${S.occ.capacity} lugares` : 'vehículos';
+  $('st-ok').textContent = S.today.filter(e => ['permitido', 'manual'].includes(e.decision)).length;
+  $('st-no').textContent = S.today.filter(e => e.decision === 'denegado').length;
+  const st = [...S.students.values()];
+  $('st-st').textContent = st.filter(hasAccess).length;
+  $('st-st2').textContent = `de ${st.length} registrados`;
+  $('st-ve').textContent = S.vehicles.size;
+  $('dash-gates').innerHTML = S.gates.length ? S.gates.map(g => {
+    const on = gateOnline(g);
+    return `<div class="card"><h3><span class="dot ${on ? 'on' : 'off'}"></span>${esc(g.name || g.id)}</h3>
+      <div class="sub">${esc(g.direction || '')} · ${esc(MODES[g.mode]?.split(' — ')[0] || g.mode || '')}${on ? '' : ' · sin conexión'}${on && g.cameraOk === false ? ' · ⚠️ sin cámara' : ''}</div>
+      <button class="btn-open" style="margin-top:12px" data-open="${esc(g.id)}" ${on ? '' : 'disabled'}>Abrir pluma</button></div>`;
+  }).join('') : '<div class="card"><div class="sub">Todavía no hay plumas. Arranca el servicio gate-service en el equipo de la pluma.</div></div>';
+  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openGate(b.dataset.open));
+  $('dash-logs').innerHTML = S.today.slice(0, 12).map(e => logRow(e, false)).join('') || '<tr class="empt-row"><td colspan="5">Sin movimientos hoy</td></tr>';
+}
+async function openGate(gateId) {
+  const g = S.gates.find(x => x.id === gateId);
+  const note = prompt(`Motivo para abrir "${g?.name || gateId}":`, 'Apertura desde el panel');
+  if (note === null) return;
+  try {
+    await addDoc(collection(db, 'commands'), { gateId, action:'open', status:'pending', note, plate:null, studentId:null, studentName:null,
+      requestedBy:S.user.uid, requestedByName:S.staff.name || S.user.email, createdAt:serverTimestamp() });
+    snack('Orden enviada a la pluma');
+  } catch (e) { snack(e.message, true); }
+}
+
+/* ── Estudiantes ── */
+$('sq').oninput = renderStudents; $('sf').onchange = renderStudents;
+function renderStudents() {
+  const q = $('sq').value.trim().toLowerCase(), qk = normalize(q), f = $('sf').value;
+  const rows = [...S.students.values()].filter(s => {
+    if (f === 'ok' && !hasAccess(s)) return false;
+    if (f === 'off' && hasAccess(s)) return false;
+    if (!q) return true;
+    return [s.name, s.id, s.career, s.email].some(x => (x || '').toLowerCase().includes(q)) || (qk.length > 2 && vehiclesOf(s.id).some(v => v.id.includes(qk)));
+  }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  $('st-tbl').innerHTML = rows.slice(0, 300).map(s => {
+    const vs = vehiclesOf(s.id), expired = s.validUntil && s.validUntil < today();
+    const state = s.active === false ? '<span class="bdg off">Suspendido</span>' : expired ? '<span class="bdg no">Vencido</span>' : '<span class="bdg ok">Activo</span>';
+    return `<tr><td><b>${esc(s.name)}</b><div class="sub">${esc(s.id)}</div></td><td>${esc(s.career || '—')}</td>
+      <td><div class="plates">${vs.map(v => `<span class="plate" style="font-size:12px${v.active === false ? ';opacity:.4' : ''}">${esc(v.plate || v.id)}</span>`).join('') || '<span class="sub">ninguno</span>'}</div></td>
+      <td>${esc(s.validUntil || 'Sin límite')}</td><td>${state}</td>
+      <td style="white-space:nowrap"><button class="tba tba-e" data-ed="${esc(s.id)}">Editar</button><button class="tba tba-d" data-del="${esc(s.id)}">Eliminar</button></td></tr>`;
+  }).join('') || `<tr class="empt-row"><td colspan="6">${S.students.size ? 'Sin resultados' : 'Aún no hay estudiantes. Agrégalos uno por uno o importa un CSV.'}</td></tr>`;
+  if (rows.length > 300) $('st-tbl').insertAdjacentHTML('beforeend', `<tr class="empt-row"><td colspan="6">Mostrando 300 de ${rows.length}. Usa el buscador.</td></tr>`);
+  document.querySelectorAll('[data-ed]').forEach(b => b.onclick = () => openStudent(b.dataset.ed));
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delStudent(b.dataset.del));
+}
+
+$('new-st').onclick = () => openStudent(null);
+function openStudent(id) {
+  const s = id ? S.students.get(id) : {};
+  S.edit = { id, existing: id ? vehiclesOf(id).map(v => ({ ...v })) : [], added: [], removed: new Set() };
+  $('mst-h').textContent = id ? 'Editar estudiante' : 'Nuevo estudiante';
+  $('st-mat').value = s.id || ''; $('st-mat').disabled = !!id;
+  $('st-name').value = s.name || ''; $('st-car').value = s.career || ''; $('st-vu').value = s.validUntil || '';
+  $('st-em').value = s.email || ''; $('st-ph').value = s.phone || ''; $('st-act').value = String(s.active !== false);
+  ['nv-plate', 'nv-brand', 'nv-model', 'nv-color'].forEach(i => $(i).value = '');
+  $('nv-warn').textContent = ''; $('mst-err').className = 'errbox';
+  renderVList();
+  $('m-st').classList.add('open');
+}
+function renderVList() {
+  const E = S.edit;
+  const rows = [
+    ...E.existing.map(v => ({ ...v, kind:'old' })),
+    ...E.added.map((v, i) => ({ ...v, kind:'new', i })),
+  ];
+  $('st-vlist').innerHTML = rows.map(v => {
+    const gone = v.kind === 'old' && E.removed.has(v.id);
+    return `<div class="vrow${gone ? ' gone' : ''}"><span class="plate" style="font-size:12px">${esc(v.plate)}</span>
+      <span class="d">${esc([v.brand, v.model, v.color].filter(Boolean).join(' ') || '—')}${v.kind === 'new' ? ' · nuevo' : ''}</span>
+      <button class="tba ${gone ? 'tba-t' : 'tba-d'}" data-k="${v.kind}" data-x="${esc(v.kind === 'old' ? v.id : v.i)}">${gone ? 'Restaurar' : 'Quitar'}</button></div>`;
+  }).join('') || '<div class="sub" style="margin-bottom:6px">Sin vehículos. Agrega la placa abajo.</div>';
+  $('st-vlist').querySelectorAll('button').forEach(b => b.onclick = () => {
+    if (b.dataset.k === 'new') E.added.splice(+b.dataset.x, 1);
+    else E.removed.has(b.dataset.x) ? E.removed.delete(b.dataset.x) : E.removed.add(b.dataset.x);
+    renderVList();
+  });
+}
+$('nv-add').onclick = () => {
+  const plate = $('nv-plate').value.trim().toUpperCase(), key = normalize(plate), E = S.edit, sid = $('st-mat').value.trim();
+  $('nv-warn').textContent = '';
+  if (key.length < 5 || key.length > 8) { $('nv-warn').textContent = 'La placa debe tener entre 5 y 8 letras o números.'; return; }
+  if (E.added.some(v => v.id === key) || E.existing.some(v => v.id === key)) { $('nv-warn').textContent = 'Esa placa ya está en la lista.'; return; }
+  const other = S.vehicles.get(key);
+  if (other && other.studentId !== sid) { $('nv-warn').textContent = `Esa placa ya está registrada a ${other.studentName || other.studentId}. Quítala de ese estudiante primero.`; return; }
+  const similar = [...S.vehicles.values()].find(v => v.id !== key && fold(v.id) === fold(key));
+  if (similar && !confirm(`Atención: ${plate} se parece mucho a ${similar.plate} (${similar.studentName}). La cámara podría confundirlas y ambas quedarían en "lectura ambigua". ¿Agregar de todos modos?`)) return;
+  E.added.push({ id:key, plate, brand:$('nv-brand').value.trim(), model:$('nv-model').value.trim(), color:$('nv-color').value.trim() });
+  ['nv-plate', 'nv-brand', 'nv-model', 'nv-color'].forEach(i => $(i).value = '');
+  renderVList();
+};
+$('nv-plate').onkeydown = e => { if (e.key === 'Enter') $('nv-add').click(); };
+
+$('mst-save').onclick = async () => {
+  const E = S.edit, id = E.id || $('st-mat').value.trim().toUpperCase(), name = $('st-name').value.trim();
+  const fail = m => { $('mst-err').textContent = m; $('mst-err').className = 'errbox on'; };
+  if (!id || !name) return fail('Matrícula y nombre son obligatorios.');
+  if (/[\/]/.test(id)) return fail('La matrícula no puede contener "/".');
+  if (!E.id && S.students.has(id)) return fail('Ya existe un estudiante con esa matrícula.');
+  const btn = $('mst-save'); busy(btn, true);
+  try {
+    const b = writeBatch(db), now = serverTimestamp();
+    b.set(doc(db, 'students', id), { name, career:$('st-car').value.trim(), validUntil:$('st-vu').value, email:$('st-em').value.trim(),
+      phone:$('st-ph').value.trim(), active:$('st-act').value === 'true', updatedAt:now, ...(E.id ? {} : { createdAt:now }) }, { merge:true });
+    for (const v of E.added) b.set(doc(db, 'vehicles', v.id), { plate:v.plate, plateKey:v.id, studentId:id, studentName:name,
+      brand:v.brand, model:v.model, color:v.color, active:true, createdAt:now });
+    for (const vid of E.removed) b.delete(doc(db, 'vehicles', vid));
+    for (const v of E.existing) if (!E.removed.has(v.id) && v.studentName !== name) b.update(doc(db, 'vehicles', v.id), { studentName:name });
+    await b.commit();
+    $('m-st').classList.remove('open');
+    snack('Estudiante guardado');
+  } catch (e) { fail(e.message); }
+  finally { busy(btn, false); }
+};
+async function delStudent(id) {
+  const s = S.students.get(id), vs = vehiclesOf(id);
+  if (!confirm(`¿Eliminar a ${s.name} (${id}) y sus ${vs.length} vehículo(s)? La bitácora histórica se conserva.\n\nSi sólo quieres quitarle el acceso, mejor edítalo y márcalo como Suspendido.`)) return;
+  const b = writeBatch(db);
+  b.delete(doc(db, 'students', id));
+  vs.forEach(v => b.delete(doc(db, 'vehicles', v.id)));
+  try { await b.commit(); snack('Estudiante eliminado'); } catch (e) { snack(e.message, true); }
+}
+
+/* ── Vehículos ── */
+$('vq').oninput = renderVehicles;
+function renderVehicles() {
+  const q = $('vq').value.trim().toLowerCase(), qk = normalize(q);
+  const rows = [...S.vehicles.values()].filter(v => !q || (qk && v.id.includes(qk)) ||
+    [v.studentName, v.studentId, v.brand, v.model, v.color].some(x => (x || '').toLowerCase().includes(q)))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  $('ve-tbl').innerHTML = rows.slice(0, 300).map(v => {
+    const s = S.students.get(v.studentId);
+    const ok = v.active !== false && hasAccess(s);
+    return `<tr><td><span class="plate">${esc(v.plate || v.id)}</span></td>
+      <td>${esc(s?.name || v.studentName || '—')}<div class="sub">${esc(v.studentId)}</div></td>
+      <td>${esc([v.brand, v.model, v.color].filter(Boolean).join(' ') || '—')}</td>
+      <td>${v.active === false ? '<span class="bdg off">Dado de baja</span>' : ok ? '<span class="bdg ok">Con acceso</span>' : '<span class="bdg no">Estudiante sin acceso</span>'}</td>
+      <td style="white-space:nowrap"><button class="tba tba-t" data-tg="${esc(v.id)}">${v.active === false ? 'Reactivar' : 'Dar de baja'}</button><button class="tba tba-e" data-st="${esc(v.studentId)}">Estudiante</button></td></tr>`;
+  }).join('') || `<tr class="empt-row"><td colspan="5">${S.vehicles.size ? 'Sin resultados' : 'Sin vehículos registrados'}</td></tr>`;
+  document.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
+    const v = S.vehicles.get(b.dataset.tg);
+    try { await updateDoc(doc(db, 'vehicles', v.id), { active: v.active === false }); } catch (e) { snack(e.message, true); }
+  });
+  document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => S.students.has(b.dataset.st) ? openStudent(b.dataset.st) : snack('El estudiante ya no existe', true));
+}
+
+/* ── Importar CSV ── */
+function parseCSV(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ',' || c === ';') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+$('csv-file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rows = parseCSV((await f.text()).replace(/^\uFEFF/, ''));
+  const head = rows.shift().map(h => h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  const col = n => head.indexOf(n);
+  if (col('matricula') < 0 || col('nombre') < 0) { $('csv-prev').innerHTML = '<div class="errbox on">El archivo debe tener al menos las columnas "matricula" y "nombre". Usa la plantilla.</div>'; return; }
+  const get = (r, n) => (col(n) >= 0 ? (r[col(n)] || '').trim() : '');
+  const students = new Map(), vehicles = new Map(), problems = [];
+  rows.forEach((r, i) => {
+    const id = get(r, 'matricula').toUpperCase().replace(/\//g, '-');
+    if (!id) { problems.push(`Fila ${i + 2}: sin matrícula`); return; }
+    const vu = get(r, 'vigencia');
+    if (vu && !/^\d{4}-\d{2}-\d{2}$/.test(vu)) problems.push(`Fila ${i + 2}: vigencia "${vu}" no está en formato AAAA-MM-DD (se ignora)`);
+    students.set(id, { name:get(r, 'nombre'), career:get(r, 'carrera'), email:get(r, 'correo'), phone:get(r, 'telefono'),
+                       validUntil:/^\d{4}-\d{2}-\d{2}$/.test(vu) ? vu : '' });
+    const plate = get(r, 'placa').toUpperCase(), key = normalize(plate);
+    if (!plate) return;
+    if (key.length < 5 || key.length > 8) { problems.push(`Fila ${i + 2}: placa "${plate}" inválida`); return; }
+    if (vehicles.has(key) && vehicles.get(key).studentId !== id) { problems.push(`Fila ${i + 2}: la placa ${plate} aparece con dos matrículas`); return; }
+    const cur = S.vehicles.get(key);
+    if (cur && cur.studentId !== id) problems.push(`Fila ${i + 2}: ${plate} pasará de ${cur.studentId} a ${id}`);
+    vehicles.set(key, { plate, plateKey:key, studentId:id, studentName:get(r, 'nombre'), brand:get(r, 'marca'), model:get(r, 'modelo'), color:get(r, 'color'), active:true });
+  });
+  const nuevos = [...students.keys()].filter(k => !S.students.has(k)).length;
+  const toDeact = $('csv-deact').checked ? [...S.students.values()].filter(s => !students.has(s.id) && s.active !== false) : [];
+  S.csvRows = { students, vehicles };
+  $('csv-prev').innerHTML = `<div class="card">
+    <p style="font-size:14px;line-height:1.7">${students.size} estudiantes (${nuevos} nuevos, ${students.size - nuevos} se actualizan) y ${vehicles.size} vehículos.
+    ${$('csv-deact').checked ? `<br>Se desactivarán <b>${toDeact.length}</b> estudiantes que no están en el archivo.` : ''}</p>
+    ${problems.length ? `<div class="warn" style="max-height:160px;overflow:auto;margin:8px 0">${problems.map(esc).join('<br>')}</div>` : ''}
+    <button class="btn-add" id="csv-go" style="margin-top:10px">Importar ahora</button></div>`;
+  $('csv-go').onclick = runImport;
+};
+$('csv-deact').onchange = () => $('csv-file').files[0] && $('csv-file').onchange({ target:$('csv-file') });
+async function runImport() {
+  const { students, vehicles } = S.csvRows, btn = $('csv-go'); busy(btn, true);
+  const ops = [];
+  const now = serverTimestamp();
+  for (const [id, s] of students) ops.push(b => b.set(doc(db, 'students', id), { ...s, active:true, updatedAt:now, ...(S.students.has(id) ? {} : { createdAt:now }) }, { merge:true }));
+  for (const [key, v] of vehicles) ops.push(b => b.set(doc(db, 'vehicles', key), { ...v, ...(S.vehicles.has(key) ? {} : { createdAt:now }) }, { merge:true }));
+  if ($('csv-deact').checked) for (const s of S.students.values()) if (!students.has(s.id) && s.active !== false) ops.push(b => b.update(doc(db, 'students', s.id), { active:false, updatedAt:now }));
+  try {
+    for (let i = 0; i < ops.length; i += 400) {
+      const b = writeBatch(db); ops.slice(i, i + 400).forEach(op => op(b)); await b.commit();
+      btn.textContent = `${Math.min(i + 400, ops.length)}/${ops.length}`;
+    }
+    $('csv-prev').innerHTML = `<div class="info-box">Importación terminada: ${ops.length} cambios guardados. Las plumas ya tienen la lista actualizada.</div>`;
+    $('csv-file').value = '';
+  } catch (e) { snack('Falló la importación: ' + e.message, true); busy(btn, false); }
+}
+
+/* ── Bitácora ── */
+['lg-dec', 'lg-gate', 'lg-q'].forEach(i => $(i).oninput = renderLogs);
+$('lg-date').onchange = loadLogs;
+async function loadLogs() {
+  const d = $('lg-date').value ? new Date($('lg-date').value + 'T00:00:00') : startOfDay();
+  const end = new Date(d); end.setDate(end.getDate() + 1);
+  $('lg-tbl').innerHTML = '<tr class="empt-row"><td colspan="6">Cargando…</td></tr>';
+  try {
+    const s = await getDocs(query(collection(db, 'accessLogs'), where('ts', '>=', d), where('ts', '<', end), orderBy('ts', 'desc'), limit(2000)));
+    S.logs = s.docs.map(x => ({ id:x.id, ...x.data() }));
+  } catch (e) { S.logs = []; snack(e.message, true); }
+  const sel = $('lg-gate'), cur = sel.value;
+  sel.innerHTML = '<option value="">Todas las plumas</option>' + S.gates.map(g => `<option value="${esc(g.id)}">${esc(g.name || g.id)}</option>`).join('');
+  sel.value = cur;
+  renderLogs();
+}
+function filteredLogs() {
+  const dec = $('lg-dec').value, gate = $('lg-gate').value, q = $('lg-q').value.trim().toLowerCase(), qk = normalize(q);
+  return S.logs.filter(e => (!dec || e.decision === dec) && (!gate || e.gateId === gate) &&
+    (!q || (qk && (e.plate || '').includes(qk)) || [e.studentName, e.studentId, e.openedBy].some(x => (x || '').toLowerCase().includes(q))));
+}
+function renderLogs() {
+  const rows = filteredLogs();
+  $('lg-tbl').innerHTML = rows.map(e => logRow(e, true)).join('') || '<tr class="empt-row"><td colspan="6">Sin movimientos en esta fecha</td></tr>';
+}
+$('lg-exp').onclick = () => {
+  const rows = filteredLogs();
+  const cols = ['fecha', 'placa', 'matricula', 'estudiante', 'carrera', 'vehiculo', 'pluma', 'sentido', 'resultado', 'motivo', 'abrio', 'confianza'];
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = rows.map(e => [toDate(e.ts)?.toLocaleString('es-MX'), e.plate, e.studentId, e.studentName, e.career, e.vehicleDesc,
+    e.gateName, e.direction, e.decision, e.reasonText, e.openedBy, e.conf].map(q).join(','));
+  const blob = new Blob(['\uFEFF' + cols.join(',') + '\n' + lines.join('\n')], { type:'text/csv;charset=utf-8' });
+  const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:`bitacora-${$('lg-date').value}.csv` });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+
+/* ── Plumas ── */
+function renderGates() {
+  $('gt-cards').innerHTML = S.gates.map(g => `<div class="card" data-g="${esc(g.id)}">
+    <h3><span class="dot ${gateOnline(g) ? 'on' : 'off'}"></span>${esc(g.id)}</h3>
+    <div class="sub" style="margin-bottom:12px">${gateOnline(g) ? 'Conectada' : 'Sin conexión'}${g.lastSeen ? ' · último contacto ' + fmtFecha(g.lastSeen) : ''}${g.cachedVehicles != null ? ' · ' + g.cachedVehicles + ' placas en memoria' : ''}${g.lastError ? '<br>⚠️ ' + esc(g.lastError) : ''}</div>
+    <div class="fg"><label>Nombre visible</label><input class="g-name" value="${esc(g.name || '')}"></div>
+    <div class="fg"><label>Sentido</label><select class="g-dir"><option value="entrada">Entrada</option><option value="salida">Salida</option></select></div>
+    <div class="fg"><label>Modo</label><select class="g-mode">${Object.entries(MODES).map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></div>
+    <button class="btn-add g-save">Guardar</button> <button class="tba tba-d g-del" style="float:right;margin-top:4px">Quitar</button></div>`).join('')
+    || '<div class="card"><div class="sub">Sin plumas registradas.</div></div>';
+  document.querySelectorAll('[data-g]').forEach(c => {
+    const g = S.gates.find(x => x.id === c.dataset.g);
+    c.querySelector('.g-dir').value = g.direction || 'entrada';
+    c.querySelector('.g-mode').value = g.mode || 'auto';
+    c.querySelector('.g-save').onclick = async () => {
+      try { await updateDoc(doc(db, 'gates', g.id), { name:c.querySelector('.g-name').value.trim(), direction:c.querySelector('.g-dir').value, mode:c.querySelector('.g-mode').value }); snack('Pluma actualizada'); }
+      catch (e) { snack(e.message, true); }
+    };
+    c.querySelector('.g-del').onclick = async () => {
+      if (!confirm(`¿Quitar "${g.id}" del panel? Si el equipo sigue encendido volverá a aparecer.`)) return;
+      try { await deleteDoc(doc(db, 'gates', g.id)); } catch (e) { snack(e.message, true); }
+    };
+  });
+  if (document.activeElement?.id !== 'oc-cap' && document.activeElement?.id !== 'oc-in') {
+    $('oc-cap').value = S.occ.capacity ?? ''; $('oc-in').value = Math.max(0, S.occ.inside || 0);
+  }
+}
+$('oc-save').onclick = async () => {
+  try { await setDoc(doc(db, 'stats', 'occupancy'), { capacity:+$('oc-cap').value || 0, inside:+$('oc-in').value || 0, updatedAt:serverTimestamp() }, { merge:true }); snack('Ocupación guardada'); }
+  catch (e) { snack(e.message, true); }
+};
+
+/* ── Personal ── */
+function renderStaff() {
+  $('sf-tbl').innerHTML = S.staffList.map(p => `<tr><td><b>${esc(p.name || '—')}</b></td><td>${esc(p.email || '')}<div class="sub">${esc(p.uid)}</div></td>
+    <td><select class="sf-role" data-u="${esc(p.uid)}" ${p.uid === S.user.uid ? 'disabled' : ''} style="background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px">
+      <option value="guardia" ${p.role === 'guardia' ? 'selected' : ''}>Guardia</option><option value="admin" ${p.role === 'admin' ? 'selected' : ''}>Administrador</option></select></td>
+    <td>${p.uid === S.user.uid ? '<span class="sub">tú</span>' : `<button class="tba tba-d" data-rm="${esc(p.uid)}">Quitar acceso</button>`}</td></tr>`).join('');
+  document.querySelectorAll('.sf-role').forEach(s => s.onchange = async () => {
+    try { await updateDoc(doc(db, 'staff', s.dataset.u), { role:s.value }); snack('Rol actualizado'); } catch (e) { snack(e.message, true); }
+  });
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
+    if (!confirm('¿Quitar el acceso de esta persona? Ya no podrá entrar a la caseta ni al panel.')) return;
+    try { await deleteDoc(doc(db, 'staff', b.dataset.rm)); snack('Acceso retirado'); } catch (e) { snack(e.message, true); }
+  });
+}
+$('new-sf').onclick = () => { ['sf-name', 'sf-em', 'sf-pw'].forEach(i => $(i).value = ''); $('msf-err').className = 'errbox'; $('m-sf').classList.add('open'); };
+$('msf-save').onclick = async () => {
+  const name = $('sf-name').value.trim(), email = $('sf-em').value.trim(), pw = $('sf-pw').value, role = $('sf-role').value;
+  const fail = m => { $('msf-err').textContent = m; $('msf-err').className = 'errbox on'; };
+  if (!name || !email || pw.length < 6) return fail('Llena nombre, correo y una contraseña de al menos 6 caracteres.');
+  const btn = $('msf-save'); busy(btn, true);
+  // Se usa una segunda instancia de Firebase para crear la cuenta sin cerrar tu sesión.
+  const tmp = initializeApp(firebaseConfig, 'alta-' + Date.now());
+  try {
+    const cred = await createUserWithEmailAndPassword(getAuth(tmp), email, pw);
+    await setDoc(doc(db, 'staff', cred.user.uid), { name, email, role, createdAt:serverTimestamp() });
+    await signOut(getAuth(tmp));
+    $('m-sf').classList.remove('open');
+    snack('Cuenta creada');
+  } catch (e) {
+    fail(e.code === 'auth/email-already-in-use' ? 'Ese correo ya tiene cuenta. Si es personal, pide su UID y dalo de alta en Firestore (colección staff).' : e.message);
+  } finally { await deleteApp(tmp); busy(btn, false); }
+};
+</script>
+</body>
+</html>

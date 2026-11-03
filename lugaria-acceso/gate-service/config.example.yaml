@@ -1,0 +1,67 @@
+# ════════════════════════════════════════════════════════════════
+#  Lugaria Acceso — configuración de UNA pluma
+#  Copia este archivo como config.yaml y ajústalo.
+#  Si tienes entrada y salida, corre un servicio por cada pluma,
+#  cada uno con su propio config.yaml y un pluma.id distinto.
+# ════════════════════════════════════════════════════════════════
+
+firebase:
+  # Firebase Console → ⚙ Configuración del proyecto → Cuentas de servicio
+  # → "Generar nueva clave privada". NUNCA subas este archivo a GitHub.
+  credenciales: credenciales-firebase.json
+
+zona_horaria: America/Mexico_City
+carpeta_datos: datos          # caché, bitácora local y capturas
+guardar_miniatura: true       # recorte pequeño de la placa en la bitácora (~5 KB)
+guardar_capturas: true        # foto completa sólo en disco local
+dias_capturas: 15             # se borran automáticamente después
+nivel_log: INFO
+
+camara:
+  # 0 = webcam USB · rtsp://usuario:clave@192.168.1.64:554/Streaming/Channels/102
+  # (Hikvision: canal 102 = sub-stream, más ligero) · o un archivo .mp4 para pruebas
+  fuente: 0
+
+reconocimiento:
+  motor: local                # local (fast-alpr, gratis) | platerecognizer (nube)
+  detector_model: yolo-v9-t-384-license-plate-end2end
+  ocr_model: cct-xs-v2-global-model
+  # platerecognizer_token: "TU_TOKEN"
+  # regions: [mx]
+
+  cuadros_por_segundo: 4      # cuántas veces por segundo se analiza
+  confianza_minima: 0.80      # lecturas con menos confianza se ignoran
+  votos_requeridos: 3         # lecturas iguales necesarias para confirmar
+  ventana_votos_s: 3          # …dentro de estos segundos
+  largo_minimo: 5
+  largo_maximo: 8
+  tolerar_un_error: false     # true = acepta 1 carácter distinto (menos seguro)
+  # Zona del cuadro donde se detiene el auto: [x1, y1, x2, y2] en fracciones 0..1
+  # zona_interes: [0.2, 0.35, 0.85, 1.0]
+
+pluma:
+  id: entrada-principal       # identificador único (aparece en el panel)
+  nombre: Entrada principal
+  sentido: entrada            # entrada | salida  (para el contador de ocupación)
+  modo: auto                  # auto | supervisado | libre  (se puede cambiar desde el panel)
+  enfriamiento_s: 30          # no reprocesar la misma placa durante este tiempo
+  orden_manual_expira_s: 60   # órdenes manuales más viejas se descartan
+  latido_s: 30
+
+  driver: simulado            # simulado | gpio | http | serial
+  pulse_ms: 800               # duración del pulso del relevador
+
+  # — gpio (Raspberry Pi) —
+  gpio_pin: 17
+  active_high: true           # muchos módulos de relevador chinos son active_high: false
+
+  # — http (Shelly / Tasmota / ESP32 / API de la pluma) —
+  # http_url: http://192.168.1.50/relay/0?turn=on&timer=1
+  # http_url_off:
+  # http_method: GET
+  # http_auth: [admin, clave]
+
+  # — serial (Arduino) —
+  # serial_port: /dev/ttyUSB0
+  # serial_baud: 9600
+  # serial_command: "OPEN\n"

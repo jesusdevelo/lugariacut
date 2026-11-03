@@ -1,0 +1,67 @@
+rules_version = '2';
+// Lugaria Acceso — reglas de seguridad
+// · Personal (colección staff/{uid} con role "admin" o "guardia") inicia sesión en la web.
+// · El servicio de la pluma usa una cuenta de servicio (Admin SDK) y NO pasa por estas reglas.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function staff()    { return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data; }
+    function isStaff()  { return signedIn() && exists(/databases/$(database)/documents/staff/$(request.auth.uid)); }
+    function isAdmin()  { return isStaff() && staff().role == 'admin'; }
+
+    // Personal: cada quien puede leer su propio registro (para saber su rol); sólo admin gestiona.
+    match /staff/{uid} {
+      allow read:  if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin()
+                   && (request.auth.uid != uid);           // un admin no puede degradarse/borrarse a sí mismo
+    }
+
+    // Padrón de estudiantes y vehículos
+    match /students/{id} {
+      allow read:  if isStaff();
+      allow write: if isAdmin();
+    }
+    match /vehicles/{plateKey} {
+      allow read:  if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // Plumas (las crea el servicio; el admin cambia nombre, sentido y modo)
+    match /gates/{gateId} {
+      allow read:   if isStaff();
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','direction','mode'])
+                    && request.resource.data.mode in ['auto','supervisado','libre']
+                    && request.resource.data.direction in ['entrada','salida'];
+      allow delete: if isAdmin();
+      allow create: if false;
+    }
+
+    // Bitácora: sólo la escribe el servicio. Nadie la edita ni la borra desde la web.
+    match /accessLogs/{id} {
+      allow read:  if isStaff();
+      allow write: if false;
+    }
+
+    // Órdenes de apertura manual: el personal las crea, el servicio las ejecuta.
+    match /commands/{id} {
+      allow read:   if isStaff();
+      allow create: if isStaff()
+                    && request.resource.data.keys().hasOnly(['gateId','action','status','note','plate','studentId',
+                                                             'studentName','requestedBy','requestedByName','createdAt'])
+                    && request.resource.data.action == 'open'
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.requestedBy == request.auth.uid
+                    && request.resource.data.createdAt == request.time
+                    && exists(/databases/$(database)/documents/gates/$(request.resource.data.gateId));
+      allow update, delete: if false;
+    }
+
+    // Contador de ocupación
+    match /stats/{id} {
+      allow read:  if isStaff();
+      allow write: if isAdmin();
+    }
+  }
+}

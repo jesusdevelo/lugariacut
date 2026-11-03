@@ -1,0 +1,5 @@
+config.yaml
+credenciales-firebase.json
+datos/
+.venv/
+__pycache__/
