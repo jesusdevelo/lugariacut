@@ -5,6 +5,16 @@
       "collectionGroup": "accessLogs",
       "fieldPath": "thumb",
       "indexes": []
+    },
+    {
+      "collectionGroup": "commands",
+      "fieldPath": "image",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "commands",
+      "fieldPath": "resultImage",
+      "indexes": []
     }
   ]
 }

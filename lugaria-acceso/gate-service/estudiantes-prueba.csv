@@ -1,5 +1,5 @@
-matricula,nombre,carrera,correo,telefono,vigencia,placa,marca,modelo,color
-A0012345,Mariana López Ruiz,Ing. en Sistemas,mariana.lopez@escuela.edu.mx,3312345678,2027-07-31,JKL-123-A,Nissan,Versa,Gris
-A0012345,Mariana López Ruiz,Ing. en Sistemas,mariana.lopez@escuela.edu.mx,3312345678,2027-07-31,JHB-45-67,Honda,Fit,Rojo
-A0023456,Carlos Ramírez Vega,Arquitectura,carlos.ramirez@escuela.edu.mx,3398765432,2025-12-31,JPS-908-B,Chevrolet,Aveo,Blanco
-A0034567,Sofía Hernández Gil,Medicina,sofia.hernandez@escuela.edu.mx,,2027-07-31,KAB-77-12,Volkswagen,Jetta,Negro
+matricula,nombre,perfil,carrera,correo,telefono,vigencia,placa,tipo,marca,modelo,color
+A0012345,Mariana López Ruiz,alumno,Ing. en Sistemas,mariana.lopez@alumnos.udg.mx,3312345678,2027-07-31,JKL-123-A,auto,Nissan,Versa,Gris
+A0012345,Mariana López Ruiz,alumno,Ing. en Sistemas,mariana.lopez@alumnos.udg.mx,3312345678,2027-07-31,JHB-45-67,camioneta,Honda,CR-V,Rojo
+A0023456,Carlos Ramírez Vega,alumno,Arquitectura,carlos.ramirez@alumnos.udg.mx,3398765432,2025-12-31,JPS-908-B,auto,Chevrolet,Aveo,Blanco
+2950871,Sofía Hernández Gil,profesor,Departamento de Medicina,sofia.hernandez@academicos.udg.mx,,,M27KP,motocicleta,Italika,FT150,Negro

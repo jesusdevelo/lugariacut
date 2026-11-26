@@ -60,6 +60,8 @@ class BaseBackend:
     def start(self, on_command: Callable[[str, dict], None]) -> None: ...
     def log_access(self, entry: dict) -> None: self.local_log.write(entry)
     def command_done(self, cmd_id: str, status: str = "done", note: str = "") -> None: ...
+    def command_result(self, cmd_id: str, status: str, result: dict | None = None,
+                       image: str | None = None, note: str = "") -> None: ...
     def bump_occupancy(self, delta: int) -> None: ...
     def stop(self) -> None: ...
 
@@ -81,7 +83,7 @@ class LocalBackend(BaseBackend):
 
 
 def load_csv(path: str) -> tuple[dict, dict]:
-    """matricula,nombre,carrera,correo,telefono,vigencia,placa,marca,modelo,color"""
+    """matricula,nombre,perfil,carrera,correo,telefono,vigencia,placa,tipo,marca,modelo,color"""
     students, vehicles = {}, {}
     with open(path, newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
@@ -91,6 +93,7 @@ def load_csv(path: str) -> tuple[dict, dict]:
                 continue
             students.setdefault(mat, {
                 "id": mat, "matricula": mat, "name": row.get("nombre", ""),
+                "kind": row.get("perfil", "").lower() or "alumno",
                 "career": row.get("carrera", ""), "validUntil": row.get("vigencia", ""),
                 "active": row.get("activo", "si").lower() not in ("no", "0", "false"),
             })
@@ -98,7 +101,8 @@ def load_csv(path: str) -> tuple[dict, dict]:
             if key:
                 vehicles[key] = {
                     "plate": row.get("placa"), "plateKey": key, "studentId": mat,
-                    "studentName": row.get("nombre", ""), "brand": row.get("marca", ""),
+                    "studentName": row.get("nombre", ""), "type": row.get("tipo", "auto"),
+                    "brand": row.get("marca", ""),
                     "model": row.get("modelo", ""), "color": row.get("color", ""), "active": True,
                 }
     return students, vehicles
@@ -256,6 +260,17 @@ class FirebaseBackend(BaseBackend):
         if note:
             upd["result"] = note
         self._enqueue("orden", lambda: self.db.collection("commands").document(cmd_id).update(upd))
+
+    def command_result(self, cmd_id, status, result=None, image=None, note=""):
+        """Respuesta de una orden de lectura (read/snapshot). Borra la imagen recibida."""
+        upd = {"status": status, "doneAt": self.fs.SERVER_TIMESTAMP, "image": self.fs.DELETE_FIELD}
+        if result is not None:
+            upd["result"] = result
+        if image:
+            upd["resultImage"] = image
+        if note:
+            upd["note"] = note
+        self._enqueue("lectura", lambda: self.db.collection("commands").document(cmd_id).update(upd))
 
     def bump_occupancy(self, delta):
         ref = self.db.collection("stats").document("occupancy")

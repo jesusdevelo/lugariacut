@@ -1,0 +1,870 @@
+{
+ "_fuente": "NOM-001-SCT-2-2016, Apéndice C normativo (DOF 24/06/2016). Transporte privado.",
+ "_reglas": "Letras sin I, Ñ, O, Q. Orden de la serie: primero las letras (en su orden), después los dígitos. Ningún grupo de dígitos puede ser todo ceros.",
+ "alphabet": "ABCDEFGHJKLMNPRSTUVWXYZ",
+ "home": "JAL",
+ "states": {
+  "AGS": "Aguascalientes",
+  "BC": "Baja California",
+  "BCS": "Baja California Sur",
+  "CAMP": "Campeche",
+  "CHIS": "Chiapas",
+  "CHIH": "Chihuahua",
+  "COAH": "Coahuila",
+  "COL": "Colima",
+  "CDMX": "Ciudad de México",
+  "DGO": "Durango",
+  "GTO": "Guanajuato",
+  "GRO": "Guerrero",
+  "HGO": "Hidalgo",
+  "JAL": "Jalisco",
+  "MEX": "Estado de México",
+  "MICH": "Michoacán",
+  "MOR": "Morelos",
+  "NAY": "Nayarit",
+  "NL": "Nuevo León",
+  "OAX": "Oaxaca",
+  "PUE": "Puebla",
+  "QRO": "Querétaro",
+  "QROO": "Quintana Roo",
+  "SLP": "San Luis Potosí",
+  "SIN": "Sinaloa",
+  "SON": "Sonora",
+  "TAB": "Tabasco",
+  "TAMPS": "Tamaulipas",
+  "TLAX": "Tlaxcala",
+  "VER": "Veracruz",
+  "YUC": "Yucatán",
+  "ZAC": "Zacatecas"
+ },
+ "kinds": {
+  "automovil": "automóvil",
+  "camion": "camión / carga",
+  "motocicleta": "motocicleta",
+  "capacidades_diferentes": "capacidades diferentes",
+  "ecologico": "vehículo ecológico"
+ },
+ "typeKinds": {
+  "auto": [
+   "automovil",
+   "capacidades_diferentes",
+   "ecologico"
+  ],
+  "camioneta": [
+   "automovil",
+   "camion",
+   "capacidades_diferentes",
+   "ecologico"
+  ],
+  "pickup": [
+   "camion",
+   "capacidades_diferentes",
+   "ecologico"
+  ],
+  "motocicleta": [
+   "motocicleta"
+  ]
+ },
+ "series": [
+  {
+   "state": "AGS",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "AAA001A",
+   "to": "AFZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "AGS",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "AAA0101",
+   "to": "AFZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "BC",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "AGA001A",
+   "to": "CYZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "BC",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "AGA0101",
+   "to": "CYZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "BCS",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "CZA001A",
+   "to": "DEZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "BCS",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "CZA0101",
+   "to": "DEZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "CAMP",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "DFA001A",
+   "to": "DKZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CAMP",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "DFA0101",
+   "to": "DKZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "CHIS",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "DLA001A",
+   "to": "DSZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CHIS",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "DLA0101",
+   "to": "DSZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "CHIH",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "DTA001A",
+   "to": "ETZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CHIH",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "DTA0101",
+   "to": "ETZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "COAH",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "EUA001A",
+   "to": "FPZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "COAH",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "EUA0101",
+   "to": "FPZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "COL",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "FRA001A",
+   "to": "FWZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "COL",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "FRA0101",
+   "to": "FWZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "DGO",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "FXA001A",
+   "to": "GFZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "DGO",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "FXA0101",
+   "to": "GFZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "MEX",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "LGA001A",
+   "to": "PEZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "MEX",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "LGA0101",
+   "to": "PEZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "GTO",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "GGA001A",
+   "to": "GYZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "GTO",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "GGA0101",
+   "to": "GYZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "GRO",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "GZA001A",
+   "to": "HFZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "GRO",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "GZA0101",
+   "to": "HFZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "HGO",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "HGA001A",
+   "to": "HRZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "HGO",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "HGA0101",
+   "to": "HRZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "JAL",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "HSA001A",
+   "to": "LFZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "JAL",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "HSA0101",
+   "to": "LFZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "MICH",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "PFA001A",
+   "to": "PUZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "MICH",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "PFA0101",
+   "to": "PUZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "MOR",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "PVA001A",
+   "to": "RDZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "MOR",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "PVA0101",
+   "to": "RDZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "NAY",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "REA001A",
+   "to": "RJZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "NAY",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "REA0101",
+   "to": "RJZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "NL",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "RKA001A",
+   "to": "TGZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "NL",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "RKA0101",
+   "to": "TGZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "OAX",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "THA001A",
+   "to": "TMZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "OAX",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "THA0101",
+   "to": "TMZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "PUE",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "TNA001A",
+   "to": "UJZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "PUE",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "TNA0101",
+   "to": "UJZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "QRO",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "UKA001A",
+   "to": "UPZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "QRO",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "UKA0101",
+   "to": "UPZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "QROO",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "URA001A",
+   "to": "UVZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "QROO",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "URA0101",
+   "to": "UVZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "SLP",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "UWA001A",
+   "to": "VEZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "SLP",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "UWA0101",
+   "to": "VEZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "SIN",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "VFA001A",
+   "to": "VSZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "SIN",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "VFA0101",
+   "to": "VSZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "SON",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "VTA001A",
+   "to": "WKZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "SON",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "VTA0101",
+   "to": "WKZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "TAB",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "WLA001A",
+   "to": "WWZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "TAB",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "WLA0101",
+   "to": "WWZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "TAMPS",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "WXA001A",
+   "to": "XSZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "TAMPS",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "WXA0101",
+   "to": "XSZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "TLAX",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "XTA001A",
+   "to": "XXZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "TLAX",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "XTA0101",
+   "to": "XXZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "VER",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "XYA001A",
+   "to": "YVZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "VER",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "XYA0101",
+   "to": "YVZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "YUC",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "YWA001A",
+   "to": "ZCZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "YUC",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "YWA0101",
+   "to": "ZCZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "ZAC",
+   "kind": "automovil",
+   "format": "LLL-DDD-L",
+   "from": "ZDA001A",
+   "to": "ZHZ999Z",
+   "era": "actual"
+  },
+  {
+   "state": "ZAC",
+   "kind": "automovil",
+   "format": "LLL-DD-DD",
+   "from": "ZDA0101",
+   "to": "ZHZ9999",
+   "era": "anterior"
+  },
+  {
+   "state": "AGS",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "AA0001A",
+   "to": "AF9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "BC",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "AG0001A",
+   "to": "CD9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "BCS",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "CE0001A",
+   "to": "CL9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CAMP",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "CM0001A",
+   "to": "CU9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CHIS",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "CV0001A",
+   "to": "DC9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CHIH",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "DD0001A",
+   "to": "EG9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "COAH",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "EH0001A",
+   "to": "FB9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "COL",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "FC0001A",
+   "to": "FJ9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "DGO",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "FK0001A",
+   "to": "FX9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "MEX",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "KL0001A",
+   "to": "MS9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "GTO",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "FY0001A",
+   "to": "GW9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "GRO",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "GX0001A",
+   "to": "HG9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "HGO",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "HH0001A",
+   "to": "HT9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "JAL",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "HU0001A",
+   "to": "KK9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "MICH",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "MT0001A",
+   "to": "NT9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "MOR",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "NU0001A",
+   "to": "NZ9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "NAY",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "PA0001A",
+   "to": "PG9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "NL",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "PH0001A",
+   "to": "RP9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "OAX",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "RR0001A",
+   "to": "RY9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "PUE",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "RZ0001A",
+   "to": "SR9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "QRO",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "SS0001A",
+   "to": "SY9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "QROO",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "SZ0001A",
+   "to": "TB9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "SLP",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "TC0001A",
+   "to": "TP9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "SIN",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "TR0001A",
+   "to": "UL9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "SON",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "UM0001A",
+   "to": "VK9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "TAB",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "VL0001A",
+   "to": "VT9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "TAMPS",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "VU0001A",
+   "to": "WX9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "TLAX",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "WY0001A",
+   "to": "XE9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "VER",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "XF0001A",
+   "to": "YM9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "YUC",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "YN0001A",
+   "to": "YU9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "ZAC",
+   "kind": "camion",
+   "format": "LL-DDDD-L",
+   "from": "YV0001A",
+   "to": "ZJ9999Z",
+   "era": "actual"
+  },
+  {
+   "state": "CDMX",
+   "kind": "automovil",
+   "format": "LDD-LLL",
+   "from": "A01AAA",
+   "to": "Z99ZZZ",
+   "era": "actual"
+  },
+  {
+   "state": "CDMX",
+   "kind": "automovil",
+   "format": "DDD-LLL",
+   "from": "001AAA",
+   "to": "999ZZZ",
+   "era": "anterior"
+  },
+  {
+   "state": "CDMX",
+   "kind": "camion",
+   "format": "L-DDD-LL",
+   "from": "A001AA",
+   "to": "Z999ZZ",
+   "era": "actual"
+  },
+  {
+   "state": "JAL",
+   "kind": "motocicleta",
+   "format": "LDDLL",
+   "from": "M01AA",
+   "to": "M99ZZ",
+   "era": "actual"
+  },
+  {
+   "state": "JAL",
+   "kind": "motocicleta",
+   "format": "LDLLD",
+   "from": "L1CK1",
+   "to": "L9VW9",
+   "era": "actual"
+  },
+  {
+   "state": "JAL",
+   "kind": "capacidades_diferentes",
+   "format": "DD-LLL",
+   "from": "01HLW",
+   "to": "99JBA",
+   "era": "actual"
+  },
+  {
+   "state": "JAL",
+   "kind": "ecologico",
+   "format": "DDL-DDD",
+   "from": "02N001",
+   "to": "08R999",
+   "era": "actual"
+  }
+ ]
+}

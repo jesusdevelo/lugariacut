@@ -11,21 +11,25 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import base64
 import logging
 import signal
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import cv2
+import numpy as np
 import yaml
 
 from backend import FirebaseBackend, LocalBackend
 from camera import Camera
 from directory import REASONS, Directory
 from gate import make_gate
+from placas_mx import verify as verify_plate
 from plates import Cooldown, PlateVoter, looks_like_plate, normalize
 from recognizer import crop_roi, make_recognizer, plate_thumb
 
@@ -56,6 +60,8 @@ class GateService:
         self.voter = PlateVoter(int(rc.get("votos_requeridos", 3)), float(rc.get("ventana_votos_s", 3)))
         self.cooldown = Cooldown(float(cfg["pluma"].get("enfriamiento_s", 30)))
         self.recognizer = make_recognizer(rc)
+        self._rec_lock = threading.Lock()   # el bucle y las órdenes de lectura comparten el modelo
+        self.cam: Camera | None = None
 
     # ── decisión ───────────────────────────────────────────
     def handle_plate(self, plate_text: str, conf: float, frame=None, box=None) -> dict:
@@ -86,10 +92,12 @@ class GateService:
             "decision": decision, "reason": d.reason, "reasonText": REASONS.get(d.reason, d.reason),
             "method": m.method,
             "vehicleId": v.get("id"), "vehiclePlate": v.get("plate"),
+            "vehicleType": v.get("type"),
             "vehicleDesc": " ".join(x for x in (v.get("brand"), v.get("model"), v.get("color")) if x),
             "studentId": s.get("id") or v.get("studentId"),
             "studentName": s.get("name") or v.get("studentName"),
             "career": s.get("career"),
+            **plate_origin(key, v.get("type")),
         }
         if frame is not None and box is not None and self.cfg.get("guardar_miniatura", True):
             entry["thumb"] = plate_thumb(frame, box)
@@ -103,31 +111,92 @@ class GateService:
         return entry
 
     def handle_command(self, cmd_id: str, cmd: dict) -> None:
-        """Orden de apertura manual enviada desde la caseta o el panel."""
+        """Órdenes desde la web: open (apertura manual), read y snapshot (sólo lectura)."""
+        action = cmd.get("action", "open")
+        if action == "open":
+            return self._cmd_open(cmd_id, cmd)
+        if action in ("read", "snapshot"):
+            return self._cmd_read(cmd_id, cmd, action)
+        self.backend.command_done(cmd_id, "error", f"Acción desconocida: {action}")
+
+    def _cmd_read(self, cmd_id: str, cmd: dict, action: str) -> None:
+        """Lee placas de una imagen enviada (read) o del cuadro actual de la cámara (snapshot).
+        Nunca abre la pluma ni escribe en la bitácora."""
+        try:
+            if action == "read":
+                frame = decode_image(cmd.get("image"))
+                if frame is None:
+                    return self.backend.command_result(cmd_id, "error", note="No se pudo leer la imagen enviada")
+            else:
+                frame = self.cam.latest(max_age=5) if self.cam else None
+                if frame is None:
+                    return self.backend.command_result(
+                        cmd_id, "error", note="La cámara de la pluma no está enviando imagen")
+            with self._rec_lock:
+                readings = self.recognizer.read(frame)
+            h, w = frame.shape[:2]
+            result = {
+                "width": w, "height": h, "roi": self.roi if action == "snapshot" else None,
+                "plates": [{"text": normalize(r.text), "raw": r.text, "conf": round(float(r.conf), 3),
+                            "box": [int(v) for v in r.box]} for r in readings],
+            }
+            image = encode_image(frame, 960) if action == "snapshot" else None
+            self.backend.command_result(cmd_id, "done", result=result, image=image)
+            log.info("🔍 Lectura %s: %s", action, ", ".join(p["text"] for p in result["plates"]) or "sin placas")
+        except Exception as e:  # noqa: BLE001
+            log.exception("Error en orden de lectura")
+            self.backend.command_result(cmd_id, "error", note=str(e)[:200])
+
+    def _cmd_open(self, cmd_id: str, cmd: dict) -> None:
+        """Apertura desde la caseta o el panel. Con via="camara-panel" la placa la reconoció la cámara
+        del panel: se vuelve a validar aquí y, si está autorizada, se registra como acceso autorizado."""
         who = cmd.get("requestedByName") or cmd.get("requestedBy") or "desconocido"
-        ok = self.gate.open(f"manual por {who}")
+        plate = normalize(cmd.get("plate"))
+        from_camera = cmd.get("via") == "camara-panel" and bool(plate)
+        d = self.directory.decide(plate, datetime.now(self.tz).date()) if from_camera else None
+        authorized = bool(d and d.allowed)
+
+        ok = self.gate.open(f"{'placa ' + plate + ' (cámara del panel)' if from_camera else 'manual'} por {who}")
         g = self.backend.gate
         if ok:
             self.backend.bump_occupancy(1 if g.get("direction") == "entrada" else -1)
-        plate = normalize(cmd.get("plate"))
         if plate:
             self.cooldown.mark(plate)
-        self.backend.log_access({
+        entry = {
             "ts": datetime.now(timezone.utc),
             "gateId": self.backend.gate_id, "gateName": g.get("name"),
             "direction": g.get("direction"), "mode": g.get("mode"),
-            "plate": plate or None, "decision": "manual" if ok else "error",
-            "reason": "apertura_manual", "reasonText": cmd.get("note") or "Apertura manual",
+            "plate": plate or None,
             "openedBy": who, "openedByUid": cmd.get("requestedBy"), "commandId": cmd_id,
             "studentName": cmd.get("studentName"), "studentId": cmd.get("studentId"),
-        })
+            **(plate_origin(plate) if plate else {}),
+        }
+        if authorized:
+            v, s = d.match.vehicle or {}, d.match.student or {}
+            entry.update({
+                "decision": "permitido" if ok else "error", "reason": "ok", "method": d.match.method,
+                "reasonText": "Acceso autorizado · cámara del panel",
+                "vehicleId": v.get("id"), "vehiclePlate": v.get("plate"), "vehicleType": v.get("type"),
+                "vehicleDesc": " ".join(x for x in (v.get("brand"), v.get("model"), v.get("color")) if x),
+                "studentId": s.get("id") or v.get("studentId"), "studentName": s.get("name") or v.get("studentName"),
+                "career": s.get("career"), **plate_origin(plate, v.get("type")),
+            })
+        else:
+            # Apertura manual, o la placa ya no está autorizada según el padrón de la pluma.
+            note = cmd.get("note") or "Apertura manual"
+            if from_camera:
+                note += f" (la pluma no la reconoce como autorizada: {REASONS.get(d.reason, d.reason)})"
+            entry.update({"decision": "manual" if ok else "error", "reason": "apertura_manual", "reasonText": note})
+        self.backend.log_access(entry)
         self.backend.command_done(cmd_id, "done" if ok else "error")
-        log.info("🖐  Apertura manual por %s %s", who, f"({plate})" if plate else "")
+        log.info("%s %s por %s", "✅ Acceso autorizado (cámara del panel)" if authorized else "🖐  Apertura manual",
+                 plate or "", who)
 
     # ── bucle principal ────────────────────────────────────
     def process_frame(self, frame):
         sub, ox, oy = crop_roi(frame, self.roi)
-        readings = self.recognizer.read(sub)
+        with self._rec_lock:
+            readings = self.recognizer.read(sub)
         out = []
         for r in readings:
             key = normalize(r.text)
@@ -143,7 +212,7 @@ class GateService:
 
     def run(self, source, show: bool = False):
         self.backend.start(self.handle_command)
-        cam = Camera(source).start()
+        cam = self.cam = Camera(source).start()
         stop = {"v": False}
         signal.signal(signal.SIGINT, lambda *_: stop.update(v=True))
         signal.signal(signal.SIGTERM, lambda *_: stop.update(v=True))
@@ -227,6 +296,37 @@ class GateService:
                 for f in d.iterdir():
                     f.unlink(missing_ok=True)
                 d.rmdir()
+
+
+def plate_origin(plate: str, vehicle_type: str | None = None) -> dict:
+    """'jalisco' o 'foranea' según las series oficiales (NOM-001-SCT-2-2016), y el estado si se conoce."""
+    try:
+        v = verify_plate(plate, vehicle_type or "camioneta")
+    except Exception:  # noqa: BLE001  (sin series-mx.json no se bloquea la pluma)
+        return {}
+    if v.result == "invalida":
+        return {}
+    return {"plateOrigin": "foranea" if v.foreign else "jalisco", "plateState": v.state_name or None}
+
+
+def decode_image(data_url: str | None):
+    """'data:image/jpeg;base64,...' -> imagen BGR de OpenCV (o None)."""
+    if not data_url or "," not in data_url:
+        return None
+    try:
+        raw = base64.b64decode(data_url.split(",", 1)[1])
+    except ValueError:
+        return None
+    return cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
+
+
+def encode_image(frame, max_width: int = 960, quality: int = 72) -> str:
+    """Imagen BGR -> data URL JPEG reducido (~60-120 KB, cabe en un documento de Firestore)."""
+    h, w = frame.shape[:2]
+    if w > max_width:
+        frame = cv2.resize(frame, (max_width, int(h * max_width / w)))
+    ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+    return "data:image/jpeg;base64," + base64.b64encode(buf.tobytes()).decode() if ok else ""
 
 
 def main():

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lugaria · Mi acceso vehicular</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+body{display:flex;justify-content:center;padding:28px 16px 60px;min-height:100vh}
+.wrap{width:100%;max-width:440px}
+.brand{font-family:var(--fh);font-size:22px;font-weight:800;text-align:center;margin-bottom:4px}
+.brand b{color:var(--acc)}
+.tag{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px}
+.screen{display:none}.screen.on{display:block}
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px}
+.panel h2{font-family:var(--fh);font-size:18px;margin-bottom:6px}
+.panel p{font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--s2);border-radius:var(--rsm);padding:3px;margin-bottom:18px}
+.tabs button{padding:9px;border-radius:6px;background:none;color:var(--muted);font-size:13px;font-weight:600}
+.tabs button.on{background:var(--s4);color:var(--text)}
+.link{background:none;color:var(--muted);font-size:12px;text-decoration:underline;margin-top:12px;display:block;width:100%}
+.me{display:flex;align-items:center;gap:12px}
+.av{width:44px;height:44px;border-radius:50%;background:var(--acc);color:#001a0d;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.me .n{font-weight:700;font-size:16px}
+.me .m{font-size:13px;color:var(--muted)}
+.state{margin-top:14px;padding:11px 13px;border-radius:var(--rsm);font-size:13px;line-height:1.5}
+.state.ok{background:rgba(0,229,160,.08);color:var(--acc)}
+.state.wait{background:rgba(245,200,66,.08);color:var(--gold)}
+.state.no{background:rgba(255,91,91,.08);color:var(--red)}
+.veh{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--border)}
+.veh:first-child{border-top:none}
+.veh .d{font-size:13px;color:var(--muted);line-height:1.45}
+.veh .d b{color:var(--text);font-weight:600}
+.veh .x{background:none;color:var(--muted);font-size:12px;padding:6px}
+.veh .x:hover{color:var(--red)}
+.preview{display:flex;justify-content:center;margin:4px 0 14px;min-height:46px;align-items:center}
+.preview .plate{font-size:28px;padding:2px 16px;border-width:3px}
+.verif{font-size:13px;line-height:1.5;padding:10px 12px;border-radius:var(--rsm);margin:-4px 0 12px;display:none}
+.verif.on{display:block}
+.verif.ok{background:rgba(0,229,160,.08);color:var(--acc)}
+.verif.wait{background:rgba(245,200,66,.08);color:var(--gold)}
+.verif.no{background:rgba(255,91,91,.08);color:var(--red)}
+.verif button{background:none;color:inherit;text-decoration:underline;font-weight:700;font-size:13px;padding:0}
+#v-plate{text-transform:uppercase;font-size:16px;letter-spacing:.05em}
+.foot{text-align:center;margin-top:8px}
+.foot button{background:none;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><b>Lug</b>aria</div>
+  <div class="tag">Acceso vehicular para la comunidad universitaria</div>
+
+  <!-- Entrar / crear cuenta -->
+  <section class="screen on" id="s-auth">
+    <div class="panel">
+      <div class="tabs"><button id="t-in" class="on">Entrar</button><button id="t-up">Crear cuenta</button></div>
+      <div class="errbox" id="a-err"></div>
+      <div class="fg" id="g-name" hidden><label for="a-name">Nombre completo</label><input id="a-name" autocomplete="name"></div>
+      <div class="fg"><label for="a-em">Correo</label><input id="a-em" type="email" autocomplete="email"><div class="hint" id="a-dom" hidden></div></div>
+      <div class="fg"><label for="a-pw">Contraseña</label><input id="a-pw" type="password" autocomplete="current-password"></div>
+      <button class="bfull" id="a-go">Entrar</button>
+      <button class="link" id="a-reset">Olvidé mi contraseña</button>
+    </div>
+  </section>
+
+  <!-- Verificar correo -->
+  <section class="screen" id="s-verify">
+    <div class="panel">
+      <h2>Confirma tu correo</h2>
+      <p>Te enviamos un enlace a <b id="v-em" style="color:var(--text)"></b>. Ábrelo y después vuelve aquí. Si no lo ves, revisa la carpeta de spam.</p>
+      <button class="bfull" id="v-done">Ya confirmé mi correo</button>
+      <button class="link" id="v-resend">Reenviar el enlace</button>
+    </div>
+  </section>
+
+  <!-- Completar perfil -->
+  <section class="screen" id="s-complete">
+    <div class="panel">
+      <h2>Completa tu registro</h2>
+      <p>Con tu matrícula o código vinculamos tu cuenta al padrón de la institución.</p>
+      <div class="errbox" id="c-err"></div>
+      <div class="fg"><label for="c-kind">Soy</label><select id="c-kind"><option value="alumno">Alumno</option><option value="profesor">Profesor</option><option value="administrativo">Administrativo</option></select></div>
+      <div class="fg"><label for="c-mat">Matrícula o código</label><input id="c-mat" autocomplete="off" style="text-transform:uppercase"></div>
+      <div class="fg"><label for="c-name">Nombre completo</label><input id="c-name" autocomplete="name"></div>
+      <div class="fg"><label for="c-car" id="c-car-l">Carrera</label><input id="c-car"></div>
+      <div class="fg"><label for="c-ph">Teléfono (opcional)</label><input id="c-ph" type="tel" autocomplete="tel"></div>
+      <button class="bfull" id="c-go">Guardar</button>
+    </div>
+  </section>
+
+  <!-- Perfil -->
+  <section class="screen" id="s-profile">
+    <div class="panel">
+      <div class="me"><div class="av" id="p-av">A</div><div><div class="n" id="p-name">—</div><div class="m" id="p-mat">—</div></div></div>
+      <div class="state" id="p-state"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Mis vehículos</h2>
+      <div id="p-veh"></div>
+    </div>
+
+    <div class="panel" id="p-addbox">
+      <h2>Agregar vehículo</h2>
+      <p>Escribe la placa tal como aparece. Si corresponde a una serie oficial de Jalisco para el tipo de vehículo que elijas, queda activa al instante; si no, la revisa administración.</p>
+      <div class="errbox" id="v-err"></div>
+      <div class="preview"><span class="plate none" id="v-prev">— — —</span></div>
+      <div class="fg"><label for="v-plate">Placa</label><input id="v-plate" placeholder="JKL-123-A" autocomplete="off" maxlength="12"></div>
+      <div class="fg"><label for="v-type">Tipo de vehículo</label><select id="v-type"></select></div>
+      <div class="verif" id="v-check" role="status" aria-live="polite"></div>
+      <div class="r3">
+        <div class="fg"><label for="v-brand">Marca</label><input id="v-brand"></div>
+        <div class="fg"><label for="v-model">Modelo</label><input id="v-model"></div>
+        <div class="fg"><label for="v-color">Color</label><input id="v-color"></div>
+      </div>
+      <button class="bfull" id="v-go">Registrar placa</button>
+    </div>
+  </section>
+
+  <div class="foot" id="foot" hidden><button id="out">Cerrar sesión</button></div>
+</div>
+<div id="snack"></div>
+
+<script type="module">
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail,
+         updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp }
+         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { KINDS, regDomains, emailDomainOk } from "./common.js";
+import { auth, db, $, esc, normalize, VEHICLE_TYPES, VSTATUS, vStatus, studentHasAccess, snack, busy } from "./common.js";
+import { loadVerifier, RESULT_UI } from "./placas-mx.js";
+
+let verifier = null;
+loadVerifier().then(v => { verifier = v; checkPlate(); }).catch(() => {});
+
+const MAX_VEHICLES = 3;
+const S = { user:null, reg:{ open:true, domains:[] }, mat:null, student:null, vehicles:[], unsub:[], mode:'in' };
+
+const show = id => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); $('foot').hidden = id === 's-auth'; };
+const err  = (id, m) => { $(id).textContent = m; $(id).className = 'errbox' + (m ? ' on' : ''); };
+$('v-type').innerHTML = Object.entries(VEHICLE_TYPES).map(([k, t]) => `<option value="${k}">${t}</option>`).join('');
+
+const domainList = () => S.reg.domains.map(d => '@' + d).join(', ');
+$('c-kind').onchange = () => { $('c-car-l').textContent = $('c-kind').value === 'alumno' ? 'Carrera' : 'Dependencia o departamento'; };
+
+/* Configuración del registro (la cambia el admin en "Revisión de placas") */
+async function loadReg() {
+  // Sin documento de configuración el registro está ABIERTO (igual que en firestore.rules).
+  try { const s = await getDoc(doc(db, 'settings', 'registration')); const d = s.data() || {}; S.reg = { open:d.open !== false, domains:regDomains(d) }; }
+  catch { S.reg = { open:true, domains:[] }; }
+  $('a-dom').hidden = !S.reg.domains.length;
+  $('a-dom').textContent = S.reg.domains.length ? `Usa tu correo institucional: ${domainList()}` : '';
+}
+loadReg();
+
+/* ── Entrar / crear cuenta ── */
+function setMode(m) {
+  S.mode = m;
+  $('t-in').classList.toggle('on', m === 'in'); $('t-up').classList.toggle('on', m === 'up');
+  $('g-name').hidden = m === 'in';
+  $('a-go').textContent = m === 'in' ? 'Entrar' : 'Crear cuenta';
+  $('a-pw').autocomplete = m === 'in' ? 'current-password' : 'new-password';
+  err('a-err', m === 'up' && !S.reg.open ? 'El registro de alumnos está cerrado por ahora. Acude a administración.' : '');
+}
+$('t-in').onclick = () => setMode('in');
+$('t-up').onclick = async () => { await loadReg(); setMode('up'); };
+
+$('a-go').onclick = async () => {
+  const email = $('a-em').value.trim().toLowerCase(), pw = $('a-pw').value, btn = $('a-go');
+  err('a-err', '');
+  if (S.mode === 'up') {
+    const name = $('a-name').value.trim();
+    if (!S.reg.open) return err('a-err', 'El registro de alumnos está cerrado por ahora. Acude a administración.');
+    if (!name) return err('a-err', 'Escribe tu nombre completo.');
+    if (!emailDomainOk(email, S.reg.domains)) return err('a-err', `Usa tu correo institucional: ${domainList()}.`);
+    if (pw.length < 8) return err('a-err', 'La contraseña debe tener al menos 8 caracteres.');
+    busy(btn, true);
+    let cred;
+    try { cred = await createUserWithEmailAndPassword(auth, email, pw); }
+    catch (e) { busy(btn, false); return err('a-err', authMsg(e)); }
+    try { await updateProfile(cred.user, { displayName:name }); } catch { /* el nombre se vuelve a pedir al completar el registro */ }
+    try { await sendEmailVerification(cred.user); }
+    catch (e) { snack('Tu cuenta se creó, pero no se pudo enviar el correo: ' + authMsg(e) + ' Usa "Reenviar el enlace".', true); }
+    busy(btn, false);
+    route(cred.user);
+  } else {
+    busy(btn, true);
+    try { await signInWithEmailAndPassword(auth, email, pw); }
+    catch (e) { err('a-err', authMsg(e)); }
+    finally { busy(btn, false); }
+  }
+};
+$('a-pw').onkeydown = e => { if (e.key === 'Enter') $('a-go').click(); };
+$('a-reset').onclick = async () => {
+  const email = $('a-em').value.trim();
+  if (!email) return err('a-err', 'Escribe tu correo y vuelve a presionar "Olvidé mi contraseña".');
+  try { await sendPasswordResetEmail(auth, email); snack('Te enviamos un enlace para cambiar tu contraseña'); }
+  catch (e) { err('a-err', authMsg(e)); }
+};
+function authMsg(e) {
+  return ({
+    'auth/email-already-in-use':   'Ese correo ya tiene cuenta. Entra con tu contraseña.',
+    'auth/invalid-email':          'El correo no es válido.',
+    'auth/invalid-credential':     'Correo o contraseña incorrectos.',
+    'auth/user-not-found':         'Correo no registrado.',
+    'auth/wrong-password':         'Contraseña incorrecta.',
+    'auth/weak-password':          'La contraseña es muy débil.',
+    'auth/too-many-requests':      'Demasiados intentos. Espera unos minutos.',
+    'auth/network-request-failed': 'Sin conexión a internet. Revisa tu red e inténtalo de nuevo.',
+    'auth/operation-not-allowed':  'El registro con correo no está habilitado. Avisa a sistemas (Firebase → Authentication → Sign-in method → Correo/Contraseña).',
+    'auth/unauthorized-domain':    'Esta página no está autorizada en Firebase. Avisa a sistemas (Authentication → Settings → Authorized domains).',
+    'auth/unauthorized-continue-uri': 'Esta página no está autorizada en Firebase. Avisa a sistemas (Authentication → Settings → Authorized domains).',
+  })[e.code] || `${e.message} (${e.code || 'sin código'})`;
+}
+
+/* Después de confirmar el correo, el token de sesión guardado sigue diciendo "no verificado"
+   hasta que se renueva (hasta 1 hora). Firestore lo revisa, así que lo renovamos a la fuerza. */
+async function freshToken(u) {
+  const t = await u.getIdTokenResult();
+  if (u.emailVerified && t.claims.email_verified !== true) await u.getIdToken(true);
+}
+
+/* Explica un "permission-denied" de Firestore durante el registro. */
+async function whyDenied(u) {
+  await loadReg();
+  const t = await u.getIdTokenResult(true);
+  if (t.claims.email_verified !== true) return 'Tu correo aún no aparece como confirmado. Abre el enlace del correo, cierra sesión y vuelve a entrar.';
+  if (!S.reg.open) return 'El registro de alumnos está cerrado. Acude a administración.';
+  if (!emailDomainOk(u.email, S.reg.domains)) return `Sólo se aceptan correos ${domainList()}. Crea tu cuenta con tu correo institucional.`;
+  return 'Firestore rechazó el registro. Lo más probable es que las reglas publicadas sean de una versión anterior: avisa a sistemas para publicar firestore.rules (firebase deploy --only firestore).';
+}
+
+/* ── Verificación de correo ── */
+$('v-resend').onclick = async () => {
+  try { await sendEmailVerification(auth.currentUser); snack('Enlace reenviado'); } catch (e) { snack(authMsg(e), true); }
+};
+$('v-done').onclick = async () => {
+  const btn = $('v-done'); busy(btn, true);
+  await auth.currentUser.reload();
+  if (auth.currentUser.emailVerified) { await auth.currentUser.getIdToken(true); route(auth.currentUser); }
+  else snack('Todavía no aparece confirmado. Abre el enlace del correo.', true);
+  busy(btn, false);
+};
+
+/* ── Enrutamiento según el estado de la cuenta ── */
+onAuthStateChanged(auth, u => { S.unsub.forEach(f => f()); S.unsub = []; u ? route(u) : show('s-auth'); });
+$('out').onclick = () => signOut(auth);
+
+async function route(u) {
+  S.user = u;
+  if (!u.emailVerified) { try { await u.reload(); } catch { /* sin red: se queda en la pantalla de verificación */ } }
+  if (!u.emailVerified) { $('v-em').textContent = u.email; return show('s-verify'); }
+  try { await freshToken(u); } catch { /* sin red; Firestore dará el error si hace falta */ }
+  try {
+    const acc = await getDoc(doc(db, 'accounts', u.uid));
+    if (acc.exists()) { S.mat = acc.data().matricula; return openProfile(); }
+  } catch (e) { return snack('No se pudo leer tu cuenta: ' + e.message, true); }
+  $('c-name').value = u.displayName || '';
+  show('s-complete');
+}
+
+/* ── Completar registro: crea o vincula students/{matricula} ── */
+$('c-go').onclick = async () => {
+  const mat = $('c-mat').value.trim().toUpperCase().replace(/\s+/g, ''), name = $('c-name').value.trim();
+  const career = $('c-car').value.trim(), phone = $('c-ph').value.trim(), u = S.user, btn = $('c-go');
+  err('c-err', '');
+  if (!/^[A-Z0-9-]{3,20}$/.test(mat)) return err('c-err', 'Escribe tu matrícula o código (sólo letras, números y guiones).');
+  if (!name) return err('c-err', 'Escribe tu nombre completo.');
+  busy(btn, true);
+  try {
+    await freshToken(u);
+    let snap;
+    try { snap = await getDoc(doc(db, 'students', mat)); }
+    catch (e) {
+      if (e.code !== 'permission-denied') return err('c-err', `No se pudo consultar la matrícula: ${e.message}`);
+      const why = await whyDenied(u);
+      return err('c-err', why.startsWith('Firestore')
+        ? 'Esa matrícula o código ya está registrado con otro correo o vinculado a otra cuenta. Acude a administración para vincularlo.'
+        : why);
+    }
+    const b = writeBatch(db), now = serverTimestamp();
+    b.set(doc(db, 'accounts', u.uid), { matricula:mat, createdAt:now });
+    if (!snap.exists()) {
+      if (!S.reg.open) return err('c-err', 'El registro de alumnos está cerrado. Acude a administración.');
+      b.set(doc(db, 'students', mat), { name, career, phone, email:u.email.toLowerCase(), uid:u.uid, kind:$('c-kind').value,
+        status:'aprobado', active:true, source:'autoregistro', createdAt:now, updatedAt:now });
+    } else {
+      const d = snap.data();
+      if (d.uid && d.uid !== u.uid) return err('c-err', 'Esa matrícula o código ya está vinculado a otra cuenta. Acude a administración.');
+      b.update(doc(db, 'students', mat), { uid:u.uid, ...(phone ? { phone } : {}), updatedAt:now });
+    }
+    await b.commit();
+    S.mat = mat;
+    openProfile();
+  } catch (e) {
+    err('c-err', e.code === 'permission-denied' ? await whyDenied(u) : `No se pudo completar el registro: ${e.message}`);
+  } finally { busy(btn, false); }
+};
+
+/* ── Perfil ── */
+function openProfile() {
+  show('s-profile');
+  S.unsub.push(onSnapshot(doc(db, 'students', S.mat), s => { S.student = s.data() || null; renderMe(); }));
+  S.unsub.push(onSnapshot(query(collection(db, 'vehicles'), where('studentId', '==', S.mat)),
+    s => { S.vehicles = s.docs.map(d => ({ id:d.id, ...d.data() })); renderVehicles(); },
+    e => snack('No se pudieron leer tus vehículos: ' + e.message, true)));
+}
+
+function renderMe() {
+  const s = S.student || {}, name = s.name || S.user.displayName || '';
+  $('p-av').textContent = (name[0] || '?').toUpperCase();
+  $('p-name').textContent = name;
+  $('p-mat').textContent = `${KINDS[s.kind] || 'Alumno'} · ${S.mat}${s.career ? ' · ' + s.career : ''}`;
+  const st = $('p-state');
+  if (!studentHasAccess(s)) { st.className = 'state no'; st.textContent = s.validUntil && s.active !== false ? `Tu vigencia terminó el ${s.validUntil}. Acude a administración para renovarla.` : 'Tu acceso está suspendido. Acude a administración.'; }
+  else { st.className = 'state ok'; st.textContent = 'Acceso activo' + (s.validUntil ? ` hasta el ${s.validUntil}` : '') + '.'; }
+}
+
+function renderVehicles() {
+  const box = $('p-veh');
+  box.innerHTML = S.vehicles.map(v => {
+    const st = VSTATUS[vStatus(v)];
+    const off = v.active === false;
+    return `<div class="veh"><span class="plate" style="font-size:15px">${esc(v.plate || v.id)}</span>
+      <div class="d"><b>${esc(VEHICLE_TYPES[v.type] || 'Vehículo')}</b> ${esc([v.brand, v.model, v.color].filter(Boolean).join(' '))}<br>
+        <span class="bdg ${off ? 'off' : st.c}">${off ? 'Dado de baja' : st.t}</span>
+        ${vStatus(v) === 'rechazado' && v.rejectReason ? `<br>${esc(v.rejectReason)}` : ''}</div>
+      <button class="x" data-del="${esc(v.id)}" aria-label="Quitar ${esc(v.plate)}">Quitar</button></div>`;
+  }).join('') || '<p style="margin:0">Aún no tienes vehículos registrados.</p>';
+  box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    const v = S.vehicles.find(x => x.id === b.dataset.del);
+    const msg = vStatus(v) === 'aprobado' ? `¿Quitar ${v.plate}? La pluma dejará de abrirle de inmediato.` : `¿Quitar ${v.plate}?`;
+    if (!confirm(msg)) return;
+    try { await deleteDoc(doc(db, 'vehicles', v.id)); snack('Vehículo quitado'); } catch (e) { snack(e.message, true); }
+  });
+  const full = S.vehicles.length >= MAX_VEHICLES;
+  $('p-addbox').hidden = full;
+  if (full) box.insertAdjacentHTML('beforeend', `<p style="margin:12px 0 0;font-size:12px">Máximo ${MAX_VEHICLES} vehículos por estudiante.</p>`);
+}
+
+/* ── Agregar vehículo ── */
+function checkPlate() {
+  const raw = $('v-plate').value.trim().toUpperCase(), box = $('v-check');
+  const r = verifier && normalize(raw).length >= 5 ? verifier.verify(raw, $('v-type').value) : null;
+  $('v-prev').textContent = (r?.display) || raw || '— — —';
+  $('v-prev').className = 'plate' + (raw ? '' : ' none');
+  if (!r) { box.className = 'verif'; return null; }
+  const ui = RESULT_UI[r.result];
+  const tail = r.autoApprove ? ' Quedará activa al registrarla.' : r.result === 'invalida' ? '' : ' Si la registras, quedará en revisión.';
+  box.className = 'verif on ' + ui.c;
+  box.innerHTML = esc(r.message + tail) + (r.suggestion ? `<br>¿Quisiste decir <button type="button" id="v-sug">${esc(r.suggestion)}</button>?` : '');
+  $('v-sug')?.addEventListener('click', () => { $('v-plate').value = r.suggestion; checkPlate(); });
+  return r;
+}
+$('v-plate').oninput = checkPlate;
+$('v-type').onchange = checkPlate;
+$('v-go').onclick = async () => {
+  const plate = $('v-plate').value.trim().toUpperCase(), key = normalize(plate), btn = $('v-go');
+  err('v-err', '');
+  if (!/^[A-Z0-9]{5,8}$/.test(key)) return err('v-err', 'La placa debe tener entre 5 y 8 letras o números.');
+  if (!/[0-9]/.test(key)) return err('v-err', 'Revisa la placa: debe incluir números.');
+  if (S.vehicles.length >= MAX_VEHICLES) return;
+  const r = checkPlate();
+  if (r?.result === 'invalida') return err('v-err', r.message);
+  // Una placa foránea es válida; sólo se pregunta si parece un error de captura de una placa de Jalisco.
+  if (r?.suggestion &&
+      !confirm(`${plate} se registrará como placa foránea. Si es de Jalisco, quizá quisiste escribir ${r.suggestion}. ¿Registrarla tal como está?`)) return;
+  const status = r?.autoApprove ? 'aprobado' : 'pendiente';
+  busy(btn, true);
+  try {
+    await setDoc(doc(db, 'vehicles', key), {
+      plate, plateKey:key, type:$('v-type').value,
+      brand:$('v-brand').value.trim(), model:$('v-model').value.trim(), color:$('v-color').value.trim(),
+      studentId:S.mat, studentName:S.student?.name || S.user.displayName || '',
+      status, active:true, ownerUid:S.user.uid, source:'alumno', createdAt:serverTimestamp(),
+    });
+    ['v-plate', 'v-brand', 'v-model', 'v-color'].forEach(i => $(i).value = '');
+    checkPlate();
+    snack(status === 'aprobado' ? 'Placa registrada y activa' : 'Placa registrada. Queda en revisión.');
+  } catch (e) {
+    err('v-err', e.code === 'permission-denied'
+      ? 'Esa placa ya está registrada en el sistema. Si es tuya, acude a administración.'
+      : e.message);
+  } finally { busy(btn, false); }
+};
+</script>
+</body>
+</html>

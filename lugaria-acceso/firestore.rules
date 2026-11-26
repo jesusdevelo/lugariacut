@@ -1,33 +1,138 @@
 rules_version = '2';
 // Lugaria Acceso — reglas de seguridad
-// · Personal (colección staff/{uid} con role "admin" o "guardia") inicia sesión en la web.
+// · Personal (staff/{uid} con role "admin" o "guardia") usa la caseta y el panel.
+// · Alumnos (accounts/{uid} -> matrícula) usan alumno.html: crean su cuenta (queda activa
+//   sin aprobación; el registro está abierto salvo que el admin lo cierre) y registran placas. Una placa se aprueba sola sólo si pertenece a una
+//   serie oficial de Jalisco compatible con el tipo de vehículo (jaliscoValida); si no,
+//   queda "pendiente" y la revisa administración.
 // · El servicio de la pluma usa una cuenta de servicio (Admin SDK) y NO pasa por estas reglas.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() { return request.auth != null; }
-    function staff()    { return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data; }
-    function isStaff()  { return signedIn() && exists(/databases/$(database)/documents/staff/$(request.auth.uid)); }
-    function isAdmin()  { return isStaff() && staff().role == 'admin'; }
+    // ── Funciones ────────────────────────────────────
+    function signedIn()  { return request.auth != null; }
+    function verified()  { return signedIn() && request.auth.token.email_verified == true; }
+    function myEmail()   { return request.auth.token.email.lower(); }
+    function staff()     { return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data; }
+    function isStaff()   { return signedIn() && exists(/databases/$(database)/documents/staff/$(request.auth.uid)); }
+    function isAdmin()   { return isStaff() && staff().role == 'admin'; }
+    function hasAccount(){ return signedIn() && exists(/databases/$(database)/documents/accounts/$(request.auth.uid)); }
+    function myMat()     { return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.matricula; }
+    // El registro de alumnos está ABIERTO salvo que un admin lo cierre (settings/registration.open == false).
+    function hasReg()    { return exists(/databases/$(database)/documents/settings/registration); }
+    function reg()       { return get(/databases/$(database)/documents/settings/registration).data; }
+    function regOpen()   { return !hasReg() || reg().get('open', true) != false; }
+    // Dominios permitidos: lista settings/registration.domains (vacía = cualquiera).
+    // "domain" (un solo texto) es el formato anterior y se sigue aceptando.
+    function domains()   { return !hasReg() ? []
+                                  : reg().get('domains', reg().get('domain', '') == '' ? [] : [reg().get('domain', '').lower()]); }
+    function domainOk()  { return domains().size() == 0 || myEmail().split('@')[1] in domains(); }
 
-    // Personal: cada quien puede leer su propio registro (para saber su rol); sólo admin gestiona.
+    // ── Series oficiales de Jalisco (NOM-001-SCT-2-2016, Apéndice C) ──
+    // Espejo de gate-service/placas_mx.py para el resultado "jalisco_valida".
+    // Letras válidas: sin I, Ñ, O, Q. test_placas.py comprueba que estas
+    // expresiones coinciden con el verificador. No las edites sin correr las pruebas.
+    // BEGIN SERIES-JALISCO
+    function jalAuto(p)   { return p.matches('^(H[S-Z]|[JK][A-HJ-NPR-Z]|L[A-F])[A-HJ-NPR-Z](00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})[A-HJ-NPR-Z]$'); }
+    function jalCamion(p) { return p.matches('^(H[U-Z]|J[A-HJ-NPR-Z]|K[A-HJK])(000[1-9]|00[1-9][0-9]|0[1-9][0-9]{2}|[1-9][0-9]{3})[A-HJ-NPR-Z]$'); }
+    function jalMoto(p)   { return p.matches('^M(0[1-9]|[1-9][0-9])[A-HJ-NPR-Z]{2}$')
+                                || p.matches('^L[1-9](C[K-NPR-Z]|[D-HJ-NPR-U][A-HJ-NPR-Z]|V[A-HJ-NPR-W])[1-9]$'); }
+    function jalCapDif(p) { return p.matches('^(0[1-9]|[1-9][0-9])(HL[W-Z]|H[MNPR-Z][A-HJ-NPR-Z]|JA[A-HJ-NPR-Z]|JBA)$'); }
+    function jalEco(p)    { return p.matches('^((0[2-9]|[1-9][0-9])N|(0[1-9]|[1-9][0-9])P|0[1-8]R)(00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})$'); }
+    // END SERIES-JALISCO
+    function jaliscoValida(p, t) {
+      return (t == 'auto'        && (jalAuto(p) || jalCapDif(p) || jalEco(p)))
+          || (t == 'camioneta'   && (jalAuto(p) || jalCamion(p) || jalCapDif(p) || jalEco(p)))
+          || (t == 'pickup'      && (jalCamion(p) || jalCapDif(p) || jalEco(p)))
+          || (t == 'motocicleta' && jalMoto(p));
+    }
+
+    // ── Personal ─────────────────────────────────────
     match /staff/{uid} {
       allow read:  if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow write: if isAdmin()
-                   && (request.auth.uid != uid);           // un admin no puede degradarse/borrarse a sí mismo
+      allow write: if isAdmin() && request.auth.uid != uid;   // un admin no puede degradarse/borrarse a sí mismo
     }
 
-    // Padrón de estudiantes y vehículos
-    match /students/{id} {
-      allow read:  if isStaff();
+    // ── Configuración del autorregistro ──────────────
+    match /settings/{id} {
+      allow get:   if true;                                    // sólo { open, domain }
+      allow list:  if isStaff();
       allow write: if isAdmin();
     }
+
+    // ── Cuenta de alumno: uid -> matrícula ───────────
+    // Se crea en el mismo lote que crea o vincula students/{matricula}.
+    match /accounts/{uid} {
+      allow read:   if signedIn() && (request.auth.uid == uid || isStaff());
+      allow create: if verified() && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['matricula','createdAt'])
+                    && request.resource.data.createdAt == request.time
+                    && getAfter(/databases/$(database)/documents/students/$(request.resource.data.matricula)).data.uid == uid;
+      allow update: if false;
+      allow delete: if isAdmin();                              // para desvincular una cuenta
+    }
+
+    // ── Estudiantes ──────────────────────────────────
+    match /students/{mat} {
+      allow list:  if isStaff();
+      // El alumno puede consultar una matrícula: si no existe, o si es suya (mismo uid o mismo correo).
+      allow get:   if isStaff()
+                   || (verified() && (resource == null
+                                      || resource.data.get('uid', null) == request.auth.uid
+                                      || resource.data.get('email', '').lower() == myEmail()));
+
+      allow create: if isAdmin()
+                    || (verified() && regOpen() && domainOk()
+                        && request.resource.data.keys().hasOnly(['name','career','phone','email','uid','status','active','source','kind','createdAt','updatedAt'])
+                        && request.resource.data.get('kind', 'alumno') in ['alumno','profesor','administrativo']
+                        && request.resource.data.uid == request.auth.uid
+                        && request.resource.data.email == myEmail()
+                        && request.resource.data.status == 'aprobado'
+                        && request.resource.data.active == true
+                        && request.resource.data.source == 'autoregistro'
+                        && request.resource.data.name is string && request.resource.data.name.size() > 0
+                        && existsAfter(/databases/$(database)/documents/accounts/$(request.auth.uid)));
+
+      allow update: if isAdmin()
+                    // Vincular un registro importado por la escuela: el correo debe coincidir.
+                    || (verified()
+                        && resource.data.get('uid', null) == null
+                        && resource.data.get('email', '').lower() == myEmail()
+                        && request.resource.data.uid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid','phone','updatedAt'])
+                        && existsAfter(/databases/$(database)/documents/accounts/$(request.auth.uid)))
+                    // Actualizar su teléfono.
+                    || (verified()
+                        && resource.data.get('uid', null) == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone','updatedAt']));
+
+      allow delete: if isAdmin();
+    }
+
+    // ── Vehículos (ID = placa normalizada, no se puede repetir) ──
     match /vehicles/{plateKey} {
-      allow read:  if isStaff();
-      allow write: if isAdmin();
+      allow read:   if isStaff() || (hasAccount() && resource.data.studentId == myMat());
+      allow create: if isAdmin()
+                    || (verified() && hasAccount()
+                        && request.resource.data.keys().hasOnly(['plate','plateKey','type','brand','model','color','studentId',
+                                                                 'studentName','status','active','ownerUid','source','createdAt'])
+                        && request.resource.data.plateKey == plateKey
+                        && plateKey.matches('^[A-Z0-9]{5,8}$')
+                        && request.resource.data.studentId == myMat()
+                        && request.resource.data.ownerUid == request.auth.uid
+                        && (request.resource.data.status == 'pendiente'
+                            || (request.resource.data.status == 'aprobado'
+                                && jaliscoValida(plateKey, request.resource.data.type)))
+                        && request.resource.data.active == true
+                        && request.resource.data.source == 'alumno'
+                        && request.resource.data.type in ['auto','camioneta','pickup','motocicleta']
+                        && request.resource.data.createdAt == request.time);
+      allow update: if isAdmin();
+      // El alumno puede quitar sus propias placas (quitar acceso nunca es riesgoso).
+      allow delete: if isAdmin() || (hasAccount() && resource.data.studentId == myMat());
     }
 
-    // Plumas (las crea el servicio; el admin cambia nombre, sentido y modo)
+    // ── Plumas (las crea el servicio; el admin cambia nombre, sentido y modo) ──
     match /gates/{gateId} {
       allow read:   if isStaff();
       allow update: if isAdmin()
@@ -38,27 +143,43 @@ service cloud.firestore {
       allow create: if false;
     }
 
-    // Bitácora: sólo la escribe el servicio. Nadie la edita ni la borra desde la web.
+    // ── Bitácora: sólo la escribe el servicio ──
     match /accessLogs/{id} {
       allow read:  if isStaff();
       allow write: if false;
     }
 
-    // Órdenes de apertura manual: el personal las crea, el servicio las ejecuta.
+    // ── Órdenes para el servicio de la pluma ──
+    //   open     → apertura manual (caseta o panel); via "camara-panel" = placa reconocida con la
+    //              cámara del panel (el servicio la revalida antes de registrarla como autorizada)
+    //   snapshot → foto actual de la cámara de la pluma + placas leídas (no abre)
+    //   read     → leer placas de una imagen enviada desde el panel (no abre)
+    function cmdBase() {
+      return request.resource.data.requestedBy == request.auth.uid
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time
+          && exists(/databases/$(database)/documents/gates/$(request.resource.data.gateId));
+    }
     match /commands/{id} {
       allow read:   if isStaff();
-      allow create: if isStaff()
-                    && request.resource.data.keys().hasOnly(['gateId','action','status','note','plate','studentId',
-                                                             'studentName','requestedBy','requestedByName','createdAt'])
-                    && request.resource.data.action == 'open'
-                    && request.resource.data.status == 'pending'
-                    && request.resource.data.requestedBy == request.auth.uid
-                    && request.resource.data.createdAt == request.time
-                    && exists(/databases/$(database)/documents/gates/$(request.resource.data.gateId));
-      allow update, delete: if false;
+      allow create: if isStaff() && cmdBase() && (
+                       (request.resource.data.action == 'open'
+                        && request.resource.data.keys().hasOnly(['gateId','action','status','note','plate','studentId',
+                                                                 'studentName','requestedBy','requestedByName','createdAt','via'])
+                        && request.resource.data.get('via', 'manual') in ['manual','camara-panel'])
+                    || (request.resource.data.action == 'snapshot'
+                        && request.resource.data.keys().hasOnly(['gateId','action','status','requestedBy','requestedByName','createdAt']))
+                    || (request.resource.data.action == 'read'
+                        && request.resource.data.keys().hasOnly(['gateId','action','status','requestedBy','requestedByName','createdAt','image'])
+                        && request.resource.data.image is string
+                        && request.resource.data.image.size() < 900000));
+      // Las lecturas y fotos (no las aperturas) las borra quien las pidió, para no acumular imágenes.
+      allow delete: if isStaff() && resource.data.action in ['read','snapshot']
+                    && resource.data.requestedBy == request.auth.uid;
+      allow update: if false;
     }
 
-    // Contador de ocupación
+    // ── Contador de ocupación ──
     match /stats/{id} {
       allow read:  if isStaff();
       allow write: if isAdmin();

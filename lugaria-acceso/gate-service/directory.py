@@ -35,6 +35,9 @@ REASONS = {
     "no_registrado":       "Placa no registrada",
     "ambigua":             "Lectura ambigua (coincide con varias placas)",
     "vehiculo_inactivo":   "Vehículo dado de baja",
+    "vehiculo_pendiente":  "Placa pendiente de aprobación",
+    "vehiculo_rechazado":  "Placa rechazada por administración",
+    "registro_pendiente":  "Registro del alumno pendiente de aprobación",
     "estudiante_inactivo": "Estudiante inactivo",
     "estudiante_no_existe":"Vehículo sin estudiante válido",
     "vigencia_vencida":    "Vigencia vencida",
@@ -109,8 +112,17 @@ class Directory:
             return Decision(False, "no_registrado", m)
         if m.vehicle.get("active") is False:
             return Decision(False, "vehiculo_inactivo", m)
+        # Placas registradas por el propio alumno requieren aprobación.
+        # Sin campo "status" (altas del admin o CSV) se consideran aprobadas.
+        vst = m.vehicle.get("status", "aprobado")
+        if vst == "pendiente":
+            return Decision(False, "vehiculo_pendiente", m)
+        if vst == "rechazado":
+            return Decision(False, "vehiculo_rechazado", m)
         if not m.student:
             return Decision(False, "estudiante_no_existe", m)
+        if m.student.get("status") == "pendiente":
+            return Decision(False, "registro_pendiente", m)
         if m.student.get("active") is False:
             return Decision(False, "estudiante_inactivo", m)
         vu = (m.student.get("validUntil") or "").strip()

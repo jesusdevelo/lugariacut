@@ -7,6 +7,7 @@
   --r:12px;--rsm:8px;--f:'Outfit',system-ui,sans-serif;--fh:'Syne','Outfit',system-ui,sans-serif;
   --plate:'Oswald','Arial Narrow',Impact,sans-serif;
 }
+[hidden]{display:none!important}   /* que ningún display:block/flex anule el atributo hidden */
 html,body{height:100%}
 body{font-family:var(--f);background:var(--bg);color:var(--text)}
 button{cursor:pointer;font-family:var(--f);border:none}

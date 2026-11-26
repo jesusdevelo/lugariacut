@@ -139,7 +139,7 @@ aside .card{background:var(--s1);border:1px solid var(--border);border-radius:va
 <script type="module">
 import { collection, query, where, orderBy, limit, onSnapshot, doc, addDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { db, $, esc, normalize, fold, DECISION, MODES, fmtHora, toDate, startOfDay, gateOnline,
+import { db, $, esc, normalize, fold, DECISION, MODES, VEHICLE_TYPES, VSTATUS, vStatus, vehicleHasAccess, fmtHora, toDate, startOfDay, gateOnline,
          snack, busy, guard, login, logout } from "./common.js";
 
 const S = { user:null, staff:null, gates:[], logs:[], vehicles:new Map(), students:new Map(),
@@ -200,7 +200,9 @@ function showLast(e, isNew) {
   if (e.thumb) { th.src = e.thumb; th.hidden = false; } else th.hidden = true;
   $('l-who').textContent = e.studentName || (e.decision === 'manual' ? (e.reasonText || 'Apertura manual') : 'Vehículo no identificado');
   $('l-meta').innerHTML = [
-    e.studentId && `Matrícula <b>${esc(e.studentId)}</b>`, e.career && esc(e.career), e.vehicleDesc && esc(e.vehicleDesc),
+    e.plateOrigin === 'foranea' && `<span class="bdg wait">Placa foránea${e.plateState ? ' · ' + esc(e.plateState) : ''}</span>`,
+    e.studentId && `Matrícula <b>${esc(e.studentId)}</b>`, e.career && esc(e.career),
+    (e.vehicleType || e.vehicleDesc) && esc([VEHICLE_TYPES[e.vehicleType], e.vehicleDesc].filter(Boolean).join(' · ')),
     e.openedBy && `Abrió: ${esc(e.openedBy)}`,
   ].filter(Boolean).join('<br>') || '&nbsp;';
   $('l-reason').textContent = e.decision === 'manual' ? '' : (e.reasonText || '') + (e.method === 'aproximada' ? ' (lectura aproximada)' : '');
@@ -277,7 +279,7 @@ function renderFeed() {
     const d = DECISION[e.decision] || DECISION.denegado;
     return `<li data-i="${i}"><span class="t">${fmtHora(e.ts).slice(0, 5)}</span>
       <span class="plate${e.plate ? '' : ' none'}" style="font-size:12px">${esc(e.plate || '—')}</span>
-      <span class="n"><span class="bdg ${d.c}" style="margin-right:6px">${d.t}</span>${esc(e.studentName || e.reasonText || '')}</span></li>`;
+      <span class="n"><span class="bdg ${d.c}" style="margin-right:6px">${d.t}</span>${e.plateOrigin === 'foranea' ? '<span class="bdg wait" style="margin-right:6px">Foránea</span>' : ''}${esc(e.studentName || e.reasonText || '')}</span></li>`;
   }).join('');
   ul.querySelectorAll('li[data-i]').forEach(li => li.onclick = () => showLast(S.logs[+li.dataset.i], false));
 }
@@ -290,11 +292,13 @@ $('lk').oninput = () => {
   if (!hits.length) { out.innerHTML = '<span style="color:var(--red)">No hay vehículos registrados con esa placa.</span>'; return; }
   out.innerHTML = hits.map(([id, v]) => {
     const s = S.students.get(v.studentId) || {};
-    const okS = s.active !== false && v.active !== false && (!s.validUntil || s.validUntil >= new Date().toISOString().slice(0, 10));
+    const okS = vehicleHasAccess(v, S.students.get(v.studentId)), vs = vStatus(v);
+    const lbl = vs !== 'aprobado' ? `<span class="bdg ${VSTATUS[vs].c}" style="margin-left:6px">${VSTATUS[vs].t}</span>`
+              : `<span class="bdg ${okS ? 'ok' : 'no'}" style="margin-left:6px">${okS ? 'Autorizado' : 'Sin acceso'}</span>`;
     return `<div style="padding:8px 0;border-top:1px solid var(--border)"><span class="plate" style="font-size:12px">${esc(v.plate || id)}</span>
-      <span class="bdg ${okS ? 'ok' : 'no'}" style="margin-left:6px">${okS ? 'Autorizado' : 'Sin acceso'}</span><br>
+      ${lbl}<br>
       <b>${esc(s.name || v.studentName || '—')}</b> · ${esc(v.studentId || '')}<br>
-      <span style="color:var(--muted)">${esc([v.brand, v.model, v.color].filter(Boolean).join(' '))}${s.validUntil ? ' · vigencia ' + esc(s.validUntil) : ''}</span></div>`;
+      <span style="color:var(--muted)">${esc([VEHICLE_TYPES[v.type], v.brand, v.model, v.color].filter(Boolean).join(' '))}${s.validUntil ? ' · vigencia ' + esc(s.validUntil) : ''}</span></div>`;
   }).join('');
 };
 

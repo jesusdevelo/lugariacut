@@ -23,6 +23,69 @@ export const DECISION = {
   manual:    { t: 'Manual',     c: 'man'  },
   error:     { t: 'Error',      c: 'no'   },
 };
+export const VEHICLE_TYPES = {
+  auto:       'Auto',
+  camioneta:  'Camioneta / SUV',
+  pickup:     'Pickup',
+  motocicleta:'Motocicleta',
+};
+/* Perfil de cada persona del padrón (colección students). */
+export const KINDS = { alumno:'Alumno', profesor:'Profesor', administrativo:'Administrativo' };
+
+/* Dominios de correo permitidos para el autorregistro: settings/registration.domains (lista).
+   Lista vacía = cualquier correo. "domain" (texto) es el formato anterior, de un solo dominio. */
+export const regDomains = d => (Array.isArray(d?.domains) ? d.domains : d?.domain ? [d.domain] : [])
+  .map(x => String(x).trim().replace(/^@/, '').toLowerCase()).filter(Boolean);
+export const emailDomainOk = (email, domains) => !domains.length || domains.includes(String(email).toLowerCase().split('@')[1]);
+export const parseDomains = text => [...new Set(String(text).split(/[\s,;]+/).map(x => x.trim().replace(/^@/, '').toLowerCase()).filter(Boolean))];
+
+export const VSTATUS = {
+  pendiente: { t:'En revisión',             c:'wait' },
+  aprobado:  { t:'Aprobado',                c:'ok'   },
+  rechazado: { t:'Rechazado',               c:'no'   },
+};
+/* Sin campo status (altas del admin o CSV) = aprobado. Igual que directory.py */
+export const vStatus = v => v?.status || 'aprobado';
+export const today   = () => new Date().toLocaleDateString('en-CA');   // AAAA-MM-DD local
+export const studentHasAccess = s => !!s && s.status !== 'pendiente' && s.active !== false && (!s.validUntil || s.validUntil >= today());
+export const vehicleHasAccess = (v, s) => !!v && v.active !== false && vStatus(v) === 'aprobado' && studentHasAccess(s);
+
+/* ── Decisión de acceso: espejo de gate-service/directory.py (lookup + decide) ── */
+export const ACCESS_REASONS = {
+  ok:                   'Acceso autorizado',
+  no_registrado:        'Placa no registrada',
+  ambigua:              'Lectura ambigua (coincide con varias placas)',
+  vehiculo_inactivo:    'Vehículo dado de baja',
+  vehiculo_pendiente:   'Placa pendiente de aprobación',
+  vehiculo_rechazado:   'Placa rechazada por administración',
+  registro_pendiente:   'Registro del alumno pendiente de aprobación',
+  estudiante_inactivo:  'Estudiante inactivo',
+  estudiante_no_existe: 'Vehículo sin estudiante válido',
+  vigencia_vencida:     'Vigencia vencida',
+};
+/* vehicles y students: Map(id -> datos). Devuelve lo mismo que decidiría la pluma en modo automático. */
+export function decideAccess(plate, vehicles, students) {
+  const key = normalize(plate);
+  let v = vehicles.get(key), method = v ? 'exacta' : '';
+  if (!v) {
+    const hits = [...vehicles.values()].filter(x => fold(x.plateKey || x.id) === fold(key));
+    if (hits.length > 1) return { allowed:false, reason:'ambigua', text:ACCESS_REASONS.ambigua, candidates:hits, method:'ambigua' };
+    if (hits.length === 1) { v = hits[0]; method = 'aproximada'; }
+  }
+  if (!v) return { allowed:false, reason:'no_registrado', text:ACCESS_REASONS.no_registrado, method:'' };
+  const s = students.get(v.studentId);
+  const st = v.status || 'aprobado';
+  const reason = v.active === false ? 'vehiculo_inactivo'
+    : st === 'pendiente' ? 'vehiculo_pendiente'
+    : st === 'rechazado' ? 'vehiculo_rechazado'
+    : !s ? 'estudiante_no_existe'
+    : s.status === 'pendiente' ? 'registro_pendiente'
+    : s.active === false ? 'estudiante_inactivo'
+    : (s.validUntil && s.validUntil.slice(0, 10) < today()) ? 'vigencia_vencida'
+    : 'ok';
+  return { allowed:reason === 'ok', reason, text:ACCESS_REASONS[reason], vehicle:v, student:s, method };
+}
+
 export const MODES = {
   auto:        'Automático — abre a vehículos autorizados',
   supervisado: 'Supervisado — avisa a la caseta, el guardia decide',
